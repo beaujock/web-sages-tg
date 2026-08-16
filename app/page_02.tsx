@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import Header from '@/components/Header';
 
 export default function Home() {
@@ -9,72 +8,57 @@ export default function Home() {
   const [status, setStatus] = useState<{
     type: 'success' | 'error' | null;
     message: string;
-    requestId?: string
   }>({ type: null, message: '' });
 
-  async function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmitting(true);
     setStatus({ type: null, message: '' });
 
     const formData = new FormData(event.currentTarget);
-    const today = new Date(Date.now());
 
+    // Prepare JSON payload for the external API
     const payload = {
-        status : 'D',
-        request_date : today,
-        request_code : null,
-        request_confirmed : false,
-        requester_full_name : formData.get('requester_full_name'),
-        requester_email  : formData.get('requester_email'),
-        requester_phone   : formData.get('requester_phone'),
-        client_full_name  : formData.get('ecole_name'),
-        client_code : formData.get('ecole_code'),
-        ecole_name: formData.get('ecole_name'),
-        ecole_code: formData.get('ecole_code'),
-        notes: formData.get('notes'),
-        create_date : today,
-        created_by  : "SAGES_ONBOARDING"
-
+      schoolFullName: formData.get('schoolFullName'),
+      schoolShortName: formData.get('schoolShortName'),
+      contactName: formData.get('contactName'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      role: formData.get('role'),
     };
 
-    const endpoint = process.env.NEXT_PUBLIC_LOG_REQUEST_URL!;
-    console.log("Endpoint = ",endpoint);
-    console.log("payload = ",payload);
+    const endpoint = process.env.NEXT_PUBLIC_EXTERNAL_API_URL || 'https://your-external-api-domain.com/api/onboarding/logrequest';
 
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          // If your external API requires an API key or auth token, add it here:
+          // 'x-api-key': process.env.NEXT_PUBLIC_API_KEY || '',
         },
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        //console.log("Response = ", response);
         const result = await response.json().catch(() => ({}));
-        const reqId = result["requete"].id;
-        setStatus({
-          type: 'success',
-          message: result.message || 'Votre demande a été enregistrée avec succès !',
-          requestId: reqId,
+        setStatus({ 
+          type: 'success', 
+          message: result.message || 'Votre demande a été envoyée avec succès !' 
         });
         (event.target as HTMLFormElement).reset();
-        
-        console.log("Requete ID = ", result["requete"].id);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        setStatus({
-          type: 'error',
-          message: errorData.message || "Une erreur s'est produite lors de l'envoi.",
+        setStatus({ 
+          type: 'error', 
+          message: errorData.message || "Une erreur s'est produite lors de l'envoi." 
         });
       }
     } catch (error) {
       console.error('External API Request Failed:', error);
-      setStatus({
-        type: 'error',
-        message: 'Impossible de contacter le serveur. Veuillez vérifier votre connexion.',
+      setStatus({ 
+        type: 'error', 
+        message: 'Impossible de contacter le serveur. Veuillez vérifier votre connexion.' 
       });
     } finally {
       setIsSubmitting(false);
@@ -87,7 +71,7 @@ export default function Home() {
 
       <main className="flex-1">
         {/* ================= HERO SECTION ================= */}
-        <section className="relative bg-linear-to-b from-teal-primary to-[#005f73] text-white py-20 lg:py-32 px-4 sm:px-6 lg:px-8">
+        <section className="relative bg-gradient-to-b from-teal-primary to-[#005f73] text-white py-20 lg:py-32 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-1 gap-12 items-center">
             <div className="space-y-6 text-center">
               <span className="inline-block bg-white/10 text-coral-accent font-extrabold px-4 py-1.5 rounded-full text-lg border border-coral-accent/30">
@@ -201,34 +185,19 @@ export default function Home() {
               Commencez votre Intégration à SAGES en remplissant le formulaire ci-dessous. Nous allons vous guider tout au long du processus.
             </p>
 
-            <form
+            <form 
               onSubmit={handleSubmit}
               className="max-w-xl mx-auto space-y-4 text-left bg-white/5 p-8 rounded-2xl border border-white/10"
             >
-              {/* Submission Feedback Message & Confirmation Step */}
               {status.message && (
                 <div
-                  className={`p-6 rounded-xl text-center space-y-4 ${
+                  className={`p-4 rounded-lg text-sm font-semibold text-center ${
                     status.type === 'success'
-                      ? 'bg-emerald-500/20 text-emerald-200 border border-emerald-500/40'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                       : 'bg-red-500/20 text-red-300 border border-red-500/40'
                   }`}
                 >
-                  <p className="font-semibold text-base">{status.message}</p>
-
-                  {status.type === 'success' && (
-                    <div className="pt-2 flex flex-col items-center gap-3 border-t border-emerald-500/30">
-                      <p className="text-sm text-emerald-100 font-medium">
-                        Cliquez le lien ci-dessous pour continuer avec l&apos;intégration à SAGES
-                      </p>
-                      <Link
-                        href={status.requestId ? `/${status.requestId}/confirmrequest` : '#'}
-                        className="inline-block bg-coral-accent hover:bg-red-500 text-white font-bold px-6 py-3 rounded-lg shadow-md transition-all text-sm uppercase tracking-wider"
-                      >
-                        Continuer
-                      </Link>
-                    </div>
-                  )}
+                  {status.message}
                 </div>
               )}
 
@@ -238,7 +207,7 @@ export default function Home() {
                 </label>
                 <input
                   type="text"
-                  name="ecole_name"
+                  name="schoolFullName"
                   placeholder="Collège d'Enseignement Général Attikpa Kagounou"
                   className="w-full px-4 py-3 rounded-lg bg-white text-charcoal-secondary focus:outline-none focus:ring-2 focus:ring-coral-accent"
                   required
@@ -247,14 +216,13 @@ export default function Home() {
 
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-200">
-                  Etablissement scolaire (Petit nom) *
+                  Etablissement scolaire (Petit nom)
                 </label>
                 <input
                   type="text"
-                  name="ecole_code"
+                  name="schoolShortName"
                   placeholder="CEG Attikpa"
                   className="w-full px-4 py-3 rounded-lg bg-white text-charcoal-secondary focus:outline-none focus:ring-2 focus:ring-coral-accent"
-                  required
                 />
               </div>
 
@@ -264,7 +232,7 @@ export default function Home() {
                 </label>
                 <input
                   type="text"
-                  name="requester_full_name"
+                  name="contactName"
                   placeholder="Koffi Abalo"
                   className="w-full px-4 py-3 rounded-lg bg-white text-charcoal-secondary focus:outline-none focus:ring-2 focus:ring-coral-accent"
                   required
@@ -278,7 +246,7 @@ export default function Home() {
                   </label>
                   <input
                     type="email"
-                    name="requester_email"
+                    name="email"
                     placeholder="koffi@ecole.edu"
                     className="w-full px-4 py-3 rounded-lg bg-white text-charcoal-secondary focus:outline-none focus:ring-2 focus:ring-coral-accent"
                     required
@@ -290,7 +258,7 @@ export default function Home() {
                   </label>
                   <input
                     type="tel"
-                    name="requester_phone"
+                    name="phone"
                     placeholder="+228 90 00 00 00"
                     className="w-full px-4 py-3 rounded-lg bg-white text-charcoal-secondary focus:outline-none focus:ring-2 focus:ring-coral-accent"
                     required
@@ -302,14 +270,12 @@ export default function Home() {
                 <label className="block text-sm font-medium mb-1 text-gray-200">
                   Votre fonction (Dans l&apos;établissement scolaire)
                 </label>
-                <select
-                  name="notes"
+                <select 
+                  name="role"
                   defaultValue=""
                   className="w-full px-4 py-3 rounded-lg bg-white text-charcoal-secondary focus:outline-none focus:ring-2 focus:ring-coral-accent"
                 >
-                  <option value="" disabled>
-                    Choisir une option
-                  </option>
+                  <option value="" disabled>Choisir une option</option>
                   <option value="Directeur">Directeur</option>
                   <option value="Fondateur">Fondateur</option>
                   <option value="Surveillant">Surveillant</option>
@@ -326,19 +292,8 @@ export default function Home() {
                 {isSubmitting ? (
                   <span className="flex items-center gap-2">
                     <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24" fill="none">
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     Envoi en cours...
                   </span>
