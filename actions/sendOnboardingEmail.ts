@@ -2,6 +2,14 @@
 
 import nodemailer from 'nodemailer';
 
+export interface ContactFormData {
+  name: string;
+  email: string;
+  phone?: string;
+  subject?: string;
+  message: string;
+}
+
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
@@ -48,3 +56,4 @@ export async function sendOnboardingEmail(formData: FormData) {
     return { success: false, message: "Une erreur s'est produite lors de l'envoi du message." };
   }
 }
+
