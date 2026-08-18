@@ -14,7 +14,7 @@ interface PageProps {
 interface StepDefinition {
   stepOrder: number;
   name: string;
-  getApiUrl: (ctx: { requestId: string; onboardingId?: string, clientId?:string, schoolId?:string }) => string;
+  getApiUrl: (ctx: { requestId: string; onboardingId?: string; clientId?: string; schoolId?: string }) => string;
 }
 
 interface StepState {
@@ -88,6 +88,7 @@ export default function ClientOnboardingPage({ params }: PageProps) {
       status: 'pending',
     }))
   );
+  const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => {
     let isSubscribed = true;
@@ -157,12 +158,10 @@ export default function ClientOnboardingPage({ params }: PageProps) {
         }
       }
 
-      // Redirect to login page upon processing all steps
-      setTimeout(() => {
-        if (isSubscribed) {
-          router.push(`/login`);
-        }
-      }, 1200);
+      // Mark the process as completed instead of redirecting to login
+      if (isSubscribed) {
+        setIsCompleted(true);
+      }
     }
 
     executeOnboardingPipeline();
@@ -170,7 +169,7 @@ export default function ClientOnboardingPage({ params }: PageProps) {
     return () => {
       isSubscribed = false;
     };
-  }, [requestId, router]);
+  }, [requestId]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-charcoal-secondary">
@@ -178,65 +177,90 @@ export default function ClientOnboardingPage({ params }: PageProps) {
 
       <main className="flex-1 flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-xl bg-white p-8 rounded-2xl border border-gray-200 shadow-lg space-y-6">
-          <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold text-charcoal-secondary">
-              Initialisation de votre plateforme
-            </h1>
-            <p className="text-sm text-gray-600">
-              Veuillez patienter pendant le traitement séquentiel des étapes.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {steps.map((step) => (
-              <div
-                key={step.stepOrder}
-                className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
-                  step.status === 'in_progress'
-                    ? 'bg-teal-primary/5 border-teal-primary/40'
-                    : step.status === 'completed'
-                    ? 'bg-emerald-500/5 border-emerald-500/30'
-                    : step.status === 'error'
-                    ? 'bg-red-500/5 border-red-500/30'
-                    : 'bg-gray-50 border-gray-200 opacity-60'
-                }`}
+          {isCompleted ? (
+            <div className="text-center space-y-6 py-4">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+                ✓
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-charcoal-secondary">
+                  Initialisation terminée !
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Un e-mail vous a été envoyé avec les instructions de connexion.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push('/')}
+                className="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl transition-colors shadow-sm"
               >
-                <div className="shrink-0 mt-0.5">
-                  {step.status === 'completed' && (
-                    <div className="w-7 h-7 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                      ✓
-                    </div>
-                  )}
-                  {step.status === 'in_progress' && (
-                    <div className="w-7 h-7 rounded-full border-2 border-teal-primary border-t-transparent animate-spin" />
-                  )}
-                  {step.status === 'pending' && (
-                    <div className="w-7 h-7 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-semibold text-xs">
-                      {step.stepOrder}
-                    </div>
-                  )}
-                  {step.status === 'error' && (
-                    <div className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                      ✕
-                    </div>
-                  )}
-                </div>
+                Retour à l&apos;accueil
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="text-center space-y-2">
+                <h1 className="text-2xl font-bold text-charcoal-secondary">
+                  Initialisation de votre plateforme
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Veuillez patienter pendant le traitement séquentiel des étapes.
+                </p>
+              </div>
 
-                <div className="flex-1">
-                  <h3
-                    className={`font-semibold text-base ${
-                      step.status === 'pending' ? 'text-gray-500' : 'text-charcoal-secondary'
+              <div className="space-y-4">
+                {steps.map((step) => (
+                  <div
+                    key={step.stepOrder}
+                    className={`flex items-start gap-4 p-4 rounded-xl border transition-all ${
+                      step.status === 'in_progress'
+                        ? 'bg-teal-primary/5 border-teal-primary/40'
+                        : step.status === 'completed'
+                        ? 'bg-emerald-500/5 border-emerald-500/30'
+                        : step.status === 'error'
+                        ? 'bg-red-500/5 border-red-500/30'
+                        : 'bg-gray-50 border-gray-200 opacity-60'
                     }`}
                   >
-                    {step.name}
-                  </h3>
-                  {step.errorMessage && (
-                    <p className="text-xs text-red-600 mt-1">{step.errorMessage}</p>
-                  )}
-                </div>
+                    <div className="shrink-0 mt-0.5">
+                      {step.status === 'completed' && (
+                        <div className="w-7 h-7 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                          ✓
+                        </div>
+                      )}
+                      {step.status === 'in_progress' && (
+                        <div className="w-7 h-7 rounded-full border-2 border-teal-primary border-t-transparent animate-spin" />
+                      )}
+                      {step.status === 'pending' && (
+                        <div className="w-7 h-7 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center font-semibold text-xs">
+                          {step.stepOrder}
+                        </div>
+                      )}
+                      {step.status === 'error' && (
+                        <div className="w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                          ✕
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1">
+                      <h3
+                        className={`font-semibold text-base ${
+                          step.status === 'pending' ? 'text-gray-500' : 'text-charcoal-secondary'
+                        }`}
+                      >
+                        {step.name}
+                      </h3>
+                      {step.errorMessage && (
+                        <p className="text-xs text-red-600 mt-1">{step.errorMessage}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       </main>
     </div>
