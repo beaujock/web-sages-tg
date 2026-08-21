@@ -103,7 +103,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="font-bold text-charcoal-secondary text-lg">Email</h3>
-                    <p className="text-gray-600 text-sm mt-1">contact@sages-ecole.com</p>
+                    <p className="text-gray-600 text-sm mt-1">info.sages.beaujock@gmail.com</p>
                   </div>
                 </div>
               </div>

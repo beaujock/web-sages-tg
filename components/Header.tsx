@@ -29,44 +29,51 @@ export default function Header() {
             </a>
           </div>
 
-          <div className="hidden md:block text-xs text-gray-400 font-light">
-            Une Meilleure Gestion de Votre Etablissement Scolaire
+          {/* Top Right Togo Flag */}
+          <div className="flex items-center gap-1" title="Togo">
+            <svg 
+              className="w-6 h-4 rounded-sm shadow-sm overflow-hidden" 
+              viewBox="0 0 500 300" 
+              aria-label="Drapeau du Togo"
+            >
+              <rect width="500" height="300" fill="#006A4E" />
+              <rect y="60" width="500" height="60" fill="#FFCE00" />
+              <rect y="180" width="500" height="60" fill="#FFCE00" />
+              <rect width="180" height="180" fill="#D21034" />
+              <polygon fill="#FFFFFF" points="90,45 101,78 135,78 108,98 118,131 90,111 62,131 72,98 45,78 79,78" />
+            </svg>
           </div>
         </div>
       </div>
 
       {/* Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {/* SAGES Logo */}
-        <Link href="/" className="flex items-center focus:outline-none">
+        {/* Brand Logos: Beaujock (Company) + SAGES (Solution) */}
+        <Link href="/" className="flex items-center space-x-3.5 focus:outline-none">
+          <Image
+            src="/beaujock-logo_02.jpg"
+            alt="Beaujock"
+            width={60}
+            height={25}
+            className="h-auto w-auto object-contain"
+            priority
+          />
+          
           <Image
             src="/SAGES_LOGO_02.jpg"
             alt="Platform SAGES"
-            width={180}
-            height={50}
-            className="h-18 w-auto object-contain"
+            width={80}
+            height={25}
+            className="h-auto w-auto object-contain"
             priority
           />
         </Link>
 
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center space-x-8 text-sm font-semibold text-charcoal-secondary">
-          <a href="./#features" className="hover:text-teal-primary transition-colors">
+          <a href="./#modules" className="hover:text-teal-primary transition-colors">
             Modules
           </a>
-         {/*
-          <a href="#solutions" className="hover:text-teal-primary transition-colors">
-            Solutions
-          </a>
-          
-          <a href="#testimonials" className="hover:text-teal-primary transition-colors">
-            Témoignages
-          </a>
-          
-          <a href="#about" className="hover:text-teal-primary transition-colors">
-            Qui sommes-nous ?
-          </a>
-           */}
           <a href="/contact" className="hover:text-teal-primary transition-colors">
             Contactez-nous
           </a>

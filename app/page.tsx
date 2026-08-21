@@ -28,7 +28,7 @@ export default function Home() {
                   Utiliser SAGES
                 </Link>
                 <a
-                  href="#features"
+                  href="#modules"
                   className="bg-white/10 hover:bg-white/20 text-white border border-white/30 font-semibold px-8 py-4 rounded-xl transition-all text-center text-lg"
                 >
                   Explorer Nos Modules
@@ -39,7 +39,7 @@ export default function Home() {
         </section>
 
         {/* ================= 4 SELLING POINTS ================= */}
-        <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <section id="modules" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold text-charcoal-secondary">
               Pourquoi utiliser SAGES ?

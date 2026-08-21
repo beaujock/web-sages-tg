@@ -43,7 +43,7 @@ export default function ConfirmRequestPage({ params }: PageProps) {
           type: 'success',
           message:
             result.message ||
-            "Votre code de vérification a été validé avec succès ! Votre demande a été transmise à l'équipe d'intégration.",
+            "Votre code de vérification a été validé avec succès ! Votre demande a été transmise à l'équipe d'intégration. Vous recevrez bientôt un e-mail avec les prochaines étapes",
         });
         setCode('');
       } else {
@@ -80,9 +80,6 @@ export default function ConfirmRequestPage({ params }: PageProps) {
                 <h1 className="text-2xl font-bold text-charcoal-secondary">
                   Demande confirmée.
                 </h1>
-                <p className="text-sm text-gray-600">
-                  Merci d&apos;avoir confirmé votre demande. Vous recevrez bientôt un e-mail de notre équipe d&apos;intégration avec les prochaines étapes.
-                </p>
                 <p className="text-sm text-emerald-800 bg-emerald-50 p-4 rounded-xl border border-emerald-200 font-medium leading-relaxed">
                   {status.message}
                 </p>
