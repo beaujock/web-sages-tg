@@ -48,7 +48,7 @@ export default function ConfirmRequestPage({ params }: PageProps) {
 
         // Redirect directly to the steps processing page
         setTimeout(() => {
-          router.push(`/${requestId}/clientonboarding`);
+          router.push(`onboarding/${requestId}/clientonboarding`);
         }, 1200);
       } else {
         const errorData = await response.json().catch(() => ({}));
