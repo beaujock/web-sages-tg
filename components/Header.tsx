@@ -75,10 +75,10 @@ export default function Header() {
         {/* Action Button */}
         <div className="flex items-center space-x-4">
           <a
-            href="./#onboarding"
+            href="./onboarding"
             className="bg-coral-accent hover:bg-red-500 text-white font-semibold text-sm px-6 py-2.5 rounded-full shadow-sm hover:shadow transition-all duration-200"
           >
-            Utiliser SAGES
+            Essayer SAGES
           </a>
         </div>
       </div>
