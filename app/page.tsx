@@ -222,7 +222,7 @@ export default function Home() {
                         Cliquez le lien ci-dessous pour continuer avec l&apos;intégration à SAGES
                       </p>
                       <Link
-                        href={status.requestId ? `/${status.requestId}/confirmrequest` : '#'}
+                        href={status.requestId ? `onboarding/${status.requestId}/confirmrequest` : '#'}
                         className="inline-block bg-coral-accent hover:bg-red-500 text-white font-bold px-6 py-3 rounded-lg shadow-md transition-all text-sm uppercase tracking-wider"
                       >
                         Continuer
