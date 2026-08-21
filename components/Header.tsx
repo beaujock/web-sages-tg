@@ -51,7 +51,7 @@ export default function Header() {
         {/* Brand Logos: Beaujock (Company) + SAGES (Solution) */}
         <Link href="/" className="flex items-center space-x-3.5 focus:outline-none">
           <Image
-            src="/beaujock-logo_02.jpg"
+            src="/BEAUJOCK-LOGO_02.jpg"
             alt="Beaujock"
             width={60}
             height={25}
