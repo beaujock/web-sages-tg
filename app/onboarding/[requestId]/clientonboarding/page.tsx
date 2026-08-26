@@ -34,7 +34,7 @@ const HARDCODED_STEPS: StepDefinition[] = [
   },
   {
     stepOrder: 2,
-    name: "Génération des étapes de configuration",
+    name: "Génération des phases d'intégration",
     getApiUrl: ({ requestId, onboardingId }) =>
       `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/createonboardingsteps`,
   },
@@ -46,7 +46,7 @@ const HARDCODED_STEPS: StepDefinition[] = [
   },
   {
     stepOrder: 4,
-    name: "Ajout des module de base au client",
+    name: "Ajout du module de base au client",
     getApiUrl: ({ requestId, onboardingId, clientId }) =>
       `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/addmodules`,
   },
