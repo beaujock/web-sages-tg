@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -25,7 +26,7 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clientCode,
-          usernameOrEmail: identifier,
+          userName: identifier,
           password,
         }),
       });
@@ -33,29 +34,54 @@ export default function LoginPage() {
       if (!res.ok) {
         throw new Error("Echec authentification. Vérifier vos information d'identification.");
       }
+      /**
+       {
+            "first_login"       : user.first_login,
+            "user" : {
+                "id"        : user.id,
+                "user_name" : user.user_name,
+                "email"     : user.email,
+                "roles"     : userRoles,
+                "resources" : userResources
+            }
+        }
+       */
 
       const data = await res.json();
-      const { cookieName, token } = data;
-      const decoded = decodeToken(token);
+      const { connectionToken, cookie_name,  effective_date, expiry_date} = data;
+      const decoded = decodeToken(connectionToken);
 
       // Save initial connection context in sessionStorage
-      sessionStorage.setItem('tempToken', token);
-      sessionStorage.setItem('cookieName', cookieName);
+      sessionStorage.setItem('tempToken', connectionToken);
+      sessionStorage.setItem('cookieName', cookie_name);
 
       // Store browser cookie
-      setClientCookie(cookieName, token, decoded.expiryDate);
+      setClientCookie(cookie_name, connectionToken, expiry_date);
 
       // Route based on role count
-      if (decoded.userRoles.length > 1) {
+      if (decoded.user.roles.length > 1) {
         router.push(`/app/${clientCode}/selectrole`);
-      } else if (decoded.userRoles.length === 1) {
-        const roleRoute = getRoleRoute(decoded.userRoles[0]);
+      } else if (decoded.user.roles.length === 1) {
+        const roleRoute = decoded.user.roles[0].toLocaleLowerCase();
+
+          const responseAddUserSession = await fetch(`${API_BASE_URL}/addusersession`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: connectionToken,
+              token_effective_time: effective_date,
+              token_expiry_time: expiry_date,
+            }),
+          });
+          if (!responseAddUserSession.ok) {
+            throw new Error("Echec ajout jeton utilisateur.");
+          }
         router.push(`/app/${clientCode}/${roleRoute}`);
       } else {
-        setError('Aucun role associé ave ce compte');
+        setError('Aucun role associé avec ce compte');
       }
     } catch (err: any) {
-      setError(err.message || "Une erreur d'authentification s'est produite");
+      setError(err.message || "Une erreur d'authentification de l'utilisateur s'est produite");
     } finally {
       setLoading(false);
     }
@@ -108,6 +134,7 @@ export default function LoginPage() {
   );
 }
 
+/*
 export function getRoleRoute(role: string): string {
   switch (role) {
     case 'client_admin':
@@ -118,3 +145,4 @@ export function getRoleRoute(role: string): string {
       return 'dashboard';
   }
 }
+  */

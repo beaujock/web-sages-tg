@@ -2,14 +2,22 @@ import jwt from 'jsonwebtoken';
 
 export const API_BASE_URL = process.env.API_BASE_URL;
 
+type resourceCombo = {
+  type_resource : string,
+  resource_id : string
+};
+
+type UserInfos = {
+  id: string;
+  user_name: string;
+  email: string;
+  roles: string[];
+  resources: resourceCombo[];
+}
+
 export interface DecodedJwtToken {
-  userId: string;
-  userName: string;
-  userEmail: string;
-  userRoles: string[];
-  userResources: string[];
-  effectiveDate: string;
-  expiryDate: string;
+  firstLogin: boolean;
+  user : UserInfos;
 }
 
 export interface AuthState {
