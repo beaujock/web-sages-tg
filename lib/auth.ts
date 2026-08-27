@@ -33,6 +33,7 @@ export interface AuthState {
 export function decodeToken(token: string): DecodedJwtToken {
 
   const verified = jwt.verify(token, JWT_SECRET, { clockTolerance: 60 });
+  console.log("Verified token : ", verified);
   if (!verified || typeof verified === 'string') {
       throw new Error('Echec Connection. Vérifier vos information d\'identification.');
     }
