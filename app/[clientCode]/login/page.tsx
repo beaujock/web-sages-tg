@@ -20,7 +20,7 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const base_url = process.env.API_BASE_URL;
+    const base_url = process.env.NEXT_PUBLIC_SAGES_BASE_URL;
 
     try {
       const res = await fetch(`${base_url}/login`, {
