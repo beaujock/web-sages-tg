@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-export const API_BASE_URL = process.env.SAGES_BASE_URL;
+export const API_BASE_URL = process.env.SAGES_BASE_URL || '';
 export const JWT_SECRET = process.env.JWT_SECRET || '';
 
 type resourceCombo = {
