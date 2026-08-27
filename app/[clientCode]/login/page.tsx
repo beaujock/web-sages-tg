@@ -112,7 +112,7 @@ export default function LoginPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Mot de</label>
+          <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
           <input
             type="password"
             required
