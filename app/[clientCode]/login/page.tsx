@@ -50,7 +50,7 @@ export default function LoginPage() {
       console.log("Response : ", res);
       const data = await res.json();
       console.log("Data : ", data);
-      const { connectionToken, cookie_name,  effective_date, expiry_date} = data;
+      const { message, connectionToken, cookie_name,  effective_date, expiry_date} = data;
       const decoded:DecodedJwtToken = decodeToken(connectionToken);
       console.log("Decoded token : ", decoded);
 
