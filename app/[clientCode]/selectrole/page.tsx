@@ -1,9 +1,10 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { API_BASE_URL, decodeToken, setClientCookie, DecodedJwtToken } from '@/lib/auth';
-import { getRoleRoute } from '../login/page';
+import { API_BASE_URL, decodeToken } from '@/lib/auth';
 
 export default function SelectRolePage() {
   const router = useRouter();
@@ -11,26 +12,34 @@ export default function SelectRolePage() {
   const clientCode = params?.clientCode as string;
 
   const [roles, setRoles] = useState<string[]>([]);
-  const [selectedRole, setSelectedRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const tempToken = sessionStorage.getItem('tempToken');
+
     if (!tempToken) {
       router.push(`/app/${clientCode}/login`);
       return;
     }
 
     try {
-      const decoded: DecodedJwtToken = decodeToken(tempToken);
-      setRoles(decoded.userRoles || []);
+      const decoded = decodeToken(tempToken);
+      const userRoles = decoded?.user?.roles || [];
+
+      if (userRoles.length === 0) {
+        setError('Aucun rôle associé à ce compte.');
+      } else {
+        setRoles(userRoles);
+        setSelectedRole(userRoles[0]);
+      }
     } catch {
-      router.push(`/app/${clientCode}/login`);
+      setError('Impossible de lire la session utilisateur.');
     }
   }, [clientCode, router]);
 
-  const handleRoleSubmit = async (e: React.FormEvent) => {
+  const handleRoleSelection = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRole) return;
 
@@ -39,35 +48,24 @@ export default function SelectRolePage() {
 
     try {
       const tempToken = sessionStorage.getItem('tempToken');
-      const cookieName = sessionStorage.getItem('cookieName') || 'session';
 
-      const res = await fetch(`${API_BASE_URL}/auth/select-role`, {
+      const responseAddUserSession = await fetch(`${API_BASE_URL}/addusersession`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${tempToken}`,
-        },
-        body: JSON.stringify({ role: selectedRole }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: tempToken,
+          role: selectedRole,
+        }),
       });
 
-      if (!res.ok) {
-        throw new Error('Failed to generate single-role session token.');
+      if (!responseAddUserSession.ok) {
+        throw new Error('Échec du choix du rôle pour la session.');
       }
 
-      const { roleToken } = await res.json();
-      const decodedRoleToken = decodeToken(roleToken);
-
-      // Overwrite current cookie with scoped role token
-      setClientCookie(cookieName, roleToken, decodedRoleToken.expiryDate);
-
-      // Save role context for menu building
-      sessionStorage.setItem('activeRole', selectedRole);
-      sessionStorage.setItem('userResources', JSON.stringify(decodedRoleToken.userResources));
-
-      const targetRoute = getRoleRoute(selectedRole);
-      router.push(`/app/${clientCode}/${targetRoute}`);
+      const roleRoute = selectedRole.toLowerCase();
+      router.push(`/app/${clientCode}/${roleRoute}`);
     } catch (err: any) {
-      setError(err.message || "Erreur d'initialisation de votre role");
+      setError(err.message || 'Une erreur est survenue lors de la sélection du rôle.');
     } finally {
       setLoading(false);
     }
@@ -75,10 +73,9 @@ export default function SelectRolePage() {
 
   return (
     <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-lg shadow-md border border-gray-200">
-      <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">Selectionne le role</h1>
-      <p className="text-sm text-gray-600 text-center mb-6">
-        Sélectionnez le role que vous voulez utiliser
-      </p>
+      <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">
+        Sélectionner un rôle
+      </h1>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
@@ -86,38 +83,43 @@ export default function SelectRolePage() {
         </div>
       )}
 
-      <form onSubmit={handleRoleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          {roles.map((role) => (
-            <label
-              key={role}
-              className={`flex items-center justify-between p-3 border rounded-md cursor-pointer transition ${
-                selectedRole === role
-                  ? 'border-coral-accent bg-orange-50'
-                  : 'border-gray-200 hover:bg-gray-50'
-              }`}
-            >
-              <span className="capitalize font-medium text-gray-800">
-                {role.replace('_', ' ')}
-              </span>
-              <input
-                type="radio"
-                name="userRole"
-                value={role}
-                checked={selectedRole === role}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="text-coral-accent focus:ring-coral-accent"
-              />
-            </label>
-          ))}
+      <form onSubmit={handleRoleSelection} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Rôles disponibles
+          </label>
+          <div className="space-y-2">
+            {roles.map((role) => (
+              <label
+                key={role}
+                className={`flex items-center p-3 border rounded-md cursor-pointer transition ${
+                  selectedRole === role
+                    ? 'border-teal-primary bg-teal-50'
+                    : 'border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="role"
+                  value={role}
+                  checked={selectedRole === role}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="h-4 w-4 text-teal-primary focus:ring-teal-primary border-gray-300"
+                />
+                <span className="ml-3 text-sm font-medium text-gray-900 capitalize">
+                  {role.replace('_', ' ')}
+                </span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <button
           type="submit"
-          disabled={!selectedRole || loading}
-          className="w-full py-2.5 px-4 bg-teal-primary text-white font-medium rounded-md hover:bg-teal-700 transition duration-150 disabled:opacity-50"
+          disabled={loading || !selectedRole}
+          className="w-full py-2.5 px-4 bg-teal-primary text-white font-medium rounded-md hover:bg-teal-700 transition duration-150 disabled:opacity-50 mt-4"
         >
-          {loading ? 'Confirmiation en cours...' : 'Continuez dans SAGES'}
+          {loading ? 'Validation...' : 'Confirmer le rôle'}
         </button>
       </form>
     </div>

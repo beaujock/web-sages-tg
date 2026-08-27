@@ -53,7 +53,7 @@ export default function LoginPage() {
 
       // Save initial connection context in sessionStorage
       sessionStorage.setItem('tempToken', connectionToken);
-      sessionStorage.setItem('cookieName', cookie_name);
+      sessionStorage.setItem('cookie_name', cookie_name);
 
       // Store browser cookie
       setClientCookie(cookie_name, connectionToken, expiry_date);
