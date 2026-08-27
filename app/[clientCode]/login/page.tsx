@@ -52,7 +52,7 @@ export default function LoginPage() {
       console.log("Data : ", data);
       const { message, connectionToken, cookie_name,  effective_date, expiry_date} = data;
       const decoded:DecodedJwtToken = decodeToken(connectionToken);
-      console.log("Decoded token : ", decoded);
+      console.log("connection token : ", connectionToken);
 
       // Save initial connection context in sessionStorage
       sessionStorage.setItem('tempToken', connectionToken);
