@@ -31,12 +31,15 @@ export interface AuthState {
 }
 
 export function decodeToken(token: string): DecodedJwtToken {
-  const verified = jwt.verify(token, JWT_SECRET);
+
+  const verified = jwt.verify(token, JWT_SECRET, { clockTolerance: 60 });
   if (!verified || typeof verified === 'string') {
       throw new Error('Echec Connection. Vérifier vos information d\'identification.');
     }
-  return verified as unknown as DecodedJwtToken;
+    return verified as DecodedJwtToken;
 }
+
+
 
 export function setClientCookie(cookieName: string, token: string, expiryDate?: string) {
   const expires = expiryDate ? `; expires=${new Date(expiryDate).toUTCString()}` : '';

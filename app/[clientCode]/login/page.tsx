@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { API_BASE_URL, decodeToken, setClientCookie } from '@/lib/auth';
+import { API_BASE_URL, DecodedJwtToken, decodeToken, setClientCookie } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -51,7 +51,7 @@ export default function LoginPage() {
       const data = await res.json();
       console.log("Data : ", data);
       const { connectionToken, cookie_name,  effective_date, expiry_date} = data;
-      const decoded = decodeToken(connectionToken);
+      const decoded:DecodedJwtToken = decodeToken(connectionToken);
       console.log("Decoded token : ", decoded);
 
       // Save initial connection context in sessionStorage
