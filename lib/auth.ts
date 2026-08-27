@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_SAGES_BASE_URL;
+export const JWT_SECRET = process.env.JWT_SECRET || '';
 
 type resourceCombo = {
   type_resource : string,
@@ -30,14 +31,11 @@ export interface AuthState {
 }
 
 export function decodeToken(token: string): DecodedJwtToken {
-  // jsonwebtoken's decode function decodes the payload without verifying the signature client-side
-  const decoded = jwt.decode(token);
-  
-  if (!decoded || typeof decoded === 'string') {
-    throw new Error('Invalid JWT token structure');
-  }
-
-  return decoded as DecodedJwtToken;
+  const verified = jwt.verify(token, JWT_SECRET);
+  if (!verified || typeof verified === 'string') {
+      throw new Error('Echec Connection. Vérifier vos information d\'identification.');
+    }
+  return verified as unknown as DecodedJwtToken;
 }
 
 export function setClientCookie(cookieName: string, token: string, expiryDate?: string) {
