@@ -22,7 +22,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const res = await fetch(`${API_BASE_URL}/${clientCode}/login`, {
+      const res = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -31,7 +31,7 @@ export default function LoginPage() {
           password : password,
         }),
       });
-      console.log("Response : ", res);
+      
 
       if (!res.ok) {
         throw new Error("Echec authentification.\nVérifier vos information d'identification.");
@@ -48,11 +48,12 @@ export default function LoginPage() {
             }
         }
        */
-
+      console.log("Response : ", res);
       const data = await res.json();
       console.log("Data : ", data);
       const { connectionToken, cookie_name,  effective_date, expiry_date} = data;
       const decoded = decodeToken(connectionToken);
+      console.log("Decoded token : ", decoded);
 
       // Save initial connection context in sessionStorage
       sessionStorage.setItem('tempToken', connectionToken);
