@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { API_BASE_URL, decodeToken, setClientCookie } from '@/lib/auth';
+import HeaderWithoutSages from '@/components/HeaderWithoutSages';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -25,14 +26,15 @@ export default function LoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clientCode,
+          clientCode : clientCode,
           userName: identifier,
-          password,
+          password : password,
         }),
       });
+      console.log("Response : ", res);
 
       if (!res.ok) {
-        throw new Error("Echec authentification. Vérifier vos information d'identification.");
+        throw new Error("Echec authentification.\nVérifier vos information d'identification.");
       }
       /**
        {
@@ -48,6 +50,7 @@ export default function LoginPage() {
        */
 
       const data = await res.json();
+      console.log("Data : ", data);
       const { connectionToken, cookie_name,  effective_date, expiry_date} = data;
       const decoded = decodeToken(connectionToken);
 
@@ -88,48 +91,51 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-lg shadow-md border border-gray-200">
-      <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">Login</h1>
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <HeaderWithoutSages />
+      <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-lg shadow-md border border-gray-200">
+        <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">Connexion (SAGES)</h1>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded">
+            {error}
+          </div>
+        )}
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Login ou email
-          </label>
-          <input
-            type="text"
-            required
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-coral-accent focus:border-coral-accent text-sm"
-          />
-        </div>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Identifiant ou email
+            </label>
+            <input
+              type="text"
+              required
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-coral-accent focus:border-coral-accent text-sm"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
-          <input
-            type="password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-coral-accent focus:border-coral-accent text-sm"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-coral-accent focus:border-coral-accent text-sm"
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2.5 px-4 bg-teal-primary text-white font-medium rounded-md hover:bg-teal-700 transition duration-150 disabled:opacity-50"
-        >
-          {loading ? 'Authentification..' : 'Se connecter'}
-        </button>
-      </form>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2.5 px-4 bg-teal-primary text-white font-medium rounded-md hover:bg-teal-700 transition duration-150 disabled:opacity-50"
+          >
+            {loading ? 'Authentification..' : 'Se connecter'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
