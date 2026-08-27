@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { API_BASE_URL, decodeToken, setClientCookie } from '@/lib/auth';
-import HeaderWithoutSages from '@/components/HeaderWithoutSages';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,10 +19,9 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const base_url = process.env.NEXT_PUBLIC_SAGES_BASE_URL;
 
     try {
-      const res = await fetch(`${base_url}/login`, {
+      const res = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,8 +91,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
-      <HeaderWithoutSages />
+
       <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-lg shadow-md border border-gray-200">
         <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">Connexion (SAGES)</h1>
 
@@ -138,19 +135,6 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
-    </div>
+
   );
 }
-
-/*
-export function getRoleRoute(role: string): string {
-  switch (role) {
-    case 'client_admin':
-      return 'admin_client';
-    case 'school_admin':
-      return 'admin_ecole';
-    default:
-      return 'dashboard';
-  }
-}
-  */
