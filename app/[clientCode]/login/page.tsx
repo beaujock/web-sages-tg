@@ -20,9 +20,10 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+    const base_url = process.env.API_BASE_URL;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/login`, {
+      const res = await fetch(`${base_url}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
