@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
@@ -17,26 +17,30 @@ export default function SelectRolePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const tempToken = sessionStorage.getItem('tempToken');
+    const initRoleSelection = async () => {
+      const tempToken = sessionStorage.getItem('tempToken');
 
-    if (!tempToken) {
-      router.push(`/app/${clientCode}/login`);
-      return;
-    }
-
-    try {
-      const decoded = decodeToken(tempToken);
-      const userRoles = decoded?.user?.roles || [];
-
-      if (userRoles.length === 0) {
-        setError('Aucun rôle associé à ce compte.');
-      } else {
-        setRoles(userRoles);
-        setSelectedRole(userRoles[0]);
+      if (!tempToken) {
+        router.push(`/app/${clientCode}/login`);
+        return;
       }
-    } catch {
-      setError('Impossible de lire la session utilisateur.');
-    }
+
+      try {
+        const decoded = await decodeToken(tempToken);
+        const userRoles = decoded?.user?.roles || [];
+
+        if (userRoles.length === 0) {
+          setError('Aucun rôle associé à ce compte.');
+        } else {
+          setRoles(userRoles);
+          setSelectedRole(userRoles[0]);
+        }
+      } catch {
+        setError('Impossible de lire la session utilisateur.');
+      }
+    };
+
+    initRoleSelection();
   }, [clientCode, router]);
 
   const handleRoleSelection = async (e: React.FormEvent) => {

@@ -1,9 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { API_BASE_URL, DecodedJwtToken, decodeToken, setClientCookie } from '@/lib/auth';
+import { API_BASE_URL, decodeToken, setClientCookie } from '@/lib/auth';
+
+// Helper function to retrieve a cookie by its name
+const getCookie = (name: string) => {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  return null;
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,6 +23,43 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // --- NEW: Check for existing cookie/token on page load ---
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const cookieName = sessionStorage.getItem('cookie_name');
+        let token = sessionStorage.getItem('tempToken') || sessionStorage.getItem('token');
+
+        // Fallback to reading the cookie if not found in sessionStorage
+        if (!token && cookieName) {
+          token = getCookie(cookieName) || null;
+        }
+
+        if (token && clientCode) {
+          const decoded = await decodeToken(token);
+          
+          if (decoded?.user?.roles) {
+            // Redirect based on role count just like in handleLogin
+            if (decoded.user.roles.length > 1) {
+              router.push(`/${clientCode}/selectrole`);
+            } else if (decoded.user.roles.length === 1) {
+              const roleRoute = decoded.user.roles[0].toLocaleLowerCase();
+              router.push(`/${clientCode}/${roleRoute}`);
+            }
+          }
+        }
+      } catch (err) {
+        console.log("No valid existing session found or token expired", err);
+        // Clean up invalid session data
+        sessionStorage.removeItem('tempToken');
+        sessionStorage.removeItem('token');
+      }
+    };
+
+    checkExistingSession();
+  }, [clientCode, router]);
+  // ---------------------------------------------------------
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,22 +77,10 @@ export default function LoginPage() {
         }),
       });
       
-
       if (!res.ok) {
         throw new Error("Echec authentification.\nVérifier vos information d'identification.");
       }
-      /**
-       {
-            "first_login"       : user.first_login,
-            "user" : {
-                "id"        : user.id,
-                "user_name" : user.user_name,
-                "email"     : user.email,
-                "roles"     : userRoles,
-                "resources" : userResources
-            }
-        }
-       */
+      
       console.log("Response : ", res);
       const data = await res.json();
       console.log("Data : ", data);
@@ -55,20 +89,25 @@ export default function LoginPage() {
       const cookie_name = data.cookie_name;
       const effective_date = data.effective_date;
       const expiry_date = data.expiry_date; 
+      const menuItems = data.menu_items;
       console.log("connection token : ", connectionToken);
-      const decoded = decodeToken(connectionToken);
+      const decoded = await decodeToken(connectionToken);
       console.log("Decoded token : ", decoded);
 
       // Save initial connection context in sessionStorage
       sessionStorage.setItem('tempToken', connectionToken);
       sessionStorage.setItem('cookie_name', cookie_name);
 
+      // Save menu items in sessionStorage
+      sessionStorage.setItem('menuItems', JSON.stringify(menuItems));
+      console.log("Menu items saved in sessionStorage: ", menuItems);
+
       // Store browser cookie
       setClientCookie(cookie_name, connectionToken, expiry_date);
 
       // Route based on role count
       if (decoded.user.roles.length > 1) {
-        router.push(`/app/${clientCode}/selectrole`);
+        router.push(`/${clientCode}/selectrole`);
       } else if (decoded.user.roles.length === 1) {
         const roleRoute = decoded.user.roles[0].toLocaleLowerCase();
 
@@ -83,8 +122,9 @@ export default function LoginPage() {
           });
           if (!responseAddUserSession.ok) {
             throw new Error("Echec ajout jeton utilisateur.");
-          }
-        router.push(`/app/${clientCode}/${roleRoute}`);
+          };
+        sessionStorage.setItem('token', connectionToken);
+        router.push(`/${clientCode}/${roleRoute}`);
       } else {
         setError('Aucun role associé avec ce compte');
       }
@@ -96,7 +136,6 @@ export default function LoginPage() {
   };
 
   return (
-
       <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-lg shadow-md border border-gray-200">
         <h1 className="text-2xl font-bold text-gray-900 text-center mb-6">Connexion (SAGES)</h1>
 
@@ -140,6 +179,5 @@ export default function LoginPage() {
           </button>
         </form>
       </div>
-
   );
 }

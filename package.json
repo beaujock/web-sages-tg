@@ -9,11 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "jose": "^6.2.10",
     "jsonwebtoken": "^9.0.3",
+    "lucide-react": "^1.35.0",
     "next": "16.3.1",
     "nodemailer": "^9.0.5",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "recharts": "^3.10.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
