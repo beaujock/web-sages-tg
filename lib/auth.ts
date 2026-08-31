@@ -40,12 +40,13 @@ export interface AuthState {
 
 export async function decodeToken(token: string): Promise<DecodedJwtToken> {
   console.log("Entering decodeToken with token: ", token);
-  console.log("Secret =  ", JWT_SECRET);
+  const SECRET = process.env.JWT_SECRET as string;
+  console.log("Secret =  ", SECRET);
 
   try {
     // jose requires the secret to be encoded as a Uint8Array
-    const secretKey = new TextEncoder().encode(JWT_SECRET);
-    console.log("Secret encoded =  ", JWT_SECRET);
+    const secretKey = new TextEncoder().encode(SECRET);
+    console.log("Secret encoded =  ", secretKey);
 
     const { payload } = await jwtVerify(token, secretKey, {
       clockTolerance: 60, // 60 seconds tolerance
