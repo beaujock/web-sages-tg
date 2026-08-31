@@ -108,7 +108,7 @@ export default function LoginPage() {
       // Route based on role count
       if (data.userRoles.length > 1) {
         router.push(`/${clientCode}/selectrole`);
-      } else if (data.userRoles.length.length === 1) {
+      } else if (data.userRoles.length === 1) {
         const roleRoute = data.userRoles.length[0].toLocaleLowerCase();
 
           const responseAddUserSession = await fetch(`${API_BASE_URL}/addusersession`, {
