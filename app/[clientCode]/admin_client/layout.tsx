@@ -21,7 +21,7 @@ export default async function AdminClientLayout({
       */}
       <div className="flex-1 flex flex-col w-full">
         {/* Horizontal Menu Bar */}
-        <DashboardTopBar clientCode={clientCode} roleCode="admin_client" />
+        {/*<DashboardTopBar clientCode={clientCode} roleCode="admin_client" />*/}
         
         {/* Main Content Area */}
         <main className="flex-1 p-6 overflow-y-auto">

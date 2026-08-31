@@ -3,8 +3,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-// Added 'Plus' icon for the creation button
-import { Loader2, School, Eye, Edit, Plus } from 'lucide-react';
+import { Loader2, School, Eye, Edit, Plus, BookOpen, GraduationCap, Users } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/auth';
 
 type AdminClientEcoleDisplay = {
@@ -74,7 +73,7 @@ export default function EcolesPage({
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 text-teal-600 animate-spin mb-4" />
+        <Loader2 className="w-8 h-8 text-teal-primary animate-spin mb-4" />
         <p className="text-gray-500">Chargement des écoles...</p>
       </div>
     );
@@ -92,7 +91,7 @@ export default function EcolesPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Liste des Écoles</h2>
+          <h2 className="text-2xl font-bold text-charcoal-secondary">Liste des Écoles</h2>
           <p className="text-sm text-gray-500 mt-1">
             Gérez vos écoles.
           </p>
@@ -101,7 +100,7 @@ export default function EcolesPage({
         {/* Creation Button in Header */}
         <Link
           href={`/${clientCode}/admin_client/ecoles/new`}
-          className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
+          className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
         >
           <Plus className="w-5 h-5 shrink-0" />
           <span className="font-medium">Nouvelle école</span>
@@ -117,7 +116,7 @@ export default function EcolesPage({
           {/* Creation Button in Empty State */}
           <Link
             href={`/${clientCode}/admin_client/ecoles/new`}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
           >
             <Plus className="w-5 h-5 shrink-0" />
             <span className="font-medium">Créer une école</span>
@@ -128,36 +127,70 @@ export default function EcolesPage({
           {ecoles.map((ecole) => (
             <div 
               key={ecole.id} 
-              className="flex items-center justify-between p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-gray-50"
+              className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-white gap-4"
             >
               {/* Ecole Info */}
-              <div className="flex items-center space-x-3 truncate pr-4">
-                <div className="p-2 bg-blue-100 rounded-lg text-blue-600 shrink-0">
+              <div className="flex items-center space-x-3 truncate">
+                <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0">
                   <School className="w-5 h-5" />
                 </div>
-                <h3 className="font-semibold text-gray-800 truncate">
-                  {ecole.full_name || 'École sans nom'}
+                <h3 className="font-semibold text-charcoal-secondary truncate" title={ecole.full_name}>
+                  {ecole.short_name || ecole.full_name || 'École sans nom'}
                 </h3>
               </div>
               
               {/* Action Links */}
-              <div className="flex items-center space-x-2 shrink-0">
+              <div className="flex items-center flex-wrap gap-2 shrink-0">
+                {/* Link to Classrooms (Teal Primary) */}
+                <Link
+                  href={`/${clientCode}/admin_client/ecoles/${ecole.id}/salleclasses`}
+                  className="flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
+                  title="Classes"
+                >
+                  <BookOpen className="w-4 h-4 shrink-0" />
+                  <span className="hidden xl:inline text-sm font-medium">Classes</span>
+                </Link>
+
+                {/* Link to Teachers (Coral Accent) */}
+                <Link
+                  href={`/${clientCode}/admin_client/ecoles/${ecole.id}/enseignants`}
+                  className="flex items-center space-x-1.5 px-3 py-2 bg-coral-accent/5 border border-coral-accent/30 rounded-lg text-coral-accent hover:bg-coral-accent hover:text-white hover:border-coral-accent transition-colors"
+                  title="Enseignants"
+                >
+                  <GraduationCap className="w-4 h-4 shrink-0" />
+                  <span className="hidden xl:inline text-sm font-medium">Enseignants</span>
+                </Link>
+
+                {/* Link to Students (Charcoal Secondary) */}
+                <Link
+                  href={`/${clientCode}/admin_client/ecoles/${ecole.id}/eleves`}
+                  className="flex items-center space-x-1.5 px-3 py-2 bg-charcoal-secondary/5 border border-charcoal-secondary/30 rounded-lg text-charcoal-secondary hover:bg-charcoal-secondary hover:text-white hover:border-charcoal-secondary transition-colors"
+                  title="Élèves"
+                >
+                  <Users className="w-4 h-4 shrink-0" />
+                  <span className="hidden xl:inline text-sm font-medium">Élèves</span>
+                </Link>
+
+                <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block"></div>
+
+                {/* Existing Details Link */}
                 <Link
                   href={`/${clientCode}/admin_client/ecoles/${ecole.id}`}
-                  className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-teal-600 hover:border-teal-200 transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-teal-primary hover:border-teal-primary/50 transition-colors"
                   title="Détails"
                 >
                   <Eye className="w-4 h-4 shrink-0" />
-                  <span className="hidden sm:inline text-sm font-medium">Détails</span>
+                  <span className="hidden xl:inline text-sm font-medium">Détails</span>
                 </Link>
 
+                {/* Existing Edit Link */}
                 <Link
                   href={`/${clientCode}/admin_client/ecoles/${ecole.id}/edit`}
-                  className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-blue-600 hover:border-blue-200 transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-charcoal-secondary hover:border-charcoal-secondary/50 transition-colors"
                   title="Mettre à jour"
                 >
                   <Edit className="w-4 h-4 shrink-0" />
-                  <span className="hidden md:inline text-sm font-medium">Mettre à jour</span>
+                  <span className="hidden xl:inline text-sm font-medium">Mettre à jour</span>
                 </Link>
               </div>
             </div>
