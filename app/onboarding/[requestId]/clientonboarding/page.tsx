@@ -30,49 +30,49 @@ const HARDCODED_STEPS: StepDefinition[] = [
     stepOrder: 1,
     name: "Création du dossier d'intégration",
     getApiUrl: ({ requestId }) =>
-      `${process.env.ONBOARDING_URL || ''}${requestId}/createonboarding`,
+      `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding`,
   },
   {
     stepOrder: 2,
     name: "Génération des phases d'intégration",
     getApiUrl: ({ requestId, onboardingId }) =>
-      `${process.env.ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/createonboardingsteps`,
+      `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/createonboardingsteps`,
   },
   {
     stepOrder: 3,
     name: "Création du dossier client",
     getApiUrl: ({ requestId, onboardingId }) =>
-      `${process.env.ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient`,
+      `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient`,
   },
   {
     stepOrder: 4,
     name: "Ajout du module de base au client",
     getApiUrl: ({ requestId, onboardingId, clientId }) =>
-      `${process.env.ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/addmodules`,
+      `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/addmodules`,
   },
   {
     stepOrder: 5,
     name: "Ajout de parametres au client",
     getApiUrl: ({ requestId, onboardingId, clientId }) =>
-      `${process.env.ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/adddefaultsettings`,
+      `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/adddefaultsettings`,
   },
   {
     stepOrder: 6,
     name: "Création de l'école",
     getApiUrl: ({ requestId, onboardingId, clientId }) =>
-      `${process.env.ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/registerschool`,
+      `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/registerschool`,
   },
   {
     stepOrder: 7,
     name: "Ajout de l'école au portfolio du client",
     getApiUrl: ({ requestId, onboardingId, clientId, schoolId }) =>
-      `${process.env.ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/registerschool/${schoolId || ''}/addschooltoclient`,
+      `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/registerschool/${schoolId || ''}/addschooltoclient`,
   },
   {
     stepOrder: 8,
     name: "Création de l'administrateur client",
     getApiUrl: ({ requestId, onboardingId, clientId }) =>
-      `${process.env.ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/registeruser`,
+      `${process.env.NEXT_PUBLIC_ONBOARDING_URL || ''}${requestId}/createonboarding/${onboardingId || ''}/registerclient/${clientId || ''}/registeruser`,
   },
 ];
 

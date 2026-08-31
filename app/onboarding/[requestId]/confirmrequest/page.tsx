@@ -26,7 +26,7 @@ export default function ConfirmRequestPage({ params }: PageProps) {
     setIsSubmitting(true);
     setStatus({ type: null, message: '' });
 
-    const baseUrl = process.env.ONBOARDING_URL || '';
+    const baseUrl = process.env.NEXT_PUBLIC_ONBOARDING_URL as string;
     const endpoint = `${baseUrl}${requestId}/confirmrequest`;
     const payload = { requestCode: code };
 
