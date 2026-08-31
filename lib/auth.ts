@@ -1,7 +1,7 @@
 import { jwtVerify } from 'jose';
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_SAGES_BASE_URL || '';
-export const JWT_SECRET: string = process.env.NEXT_PUBLIC_JWT_SECRET!;
+export const API_BASE_URL = process.env.SAGES_BASE_URL || '';
+export const JWT_SECRET: string = process.env.JWT_SECRET!;
 
 type resourceCombo = {
   type_resource: string;
