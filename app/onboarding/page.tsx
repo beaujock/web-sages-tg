@@ -37,7 +37,7 @@ export default function OnboardingPage() {
       created_by: 'SAGES_ONBOARDING',
     };
 
-    const endpoint = process.env.LOG_REQUEST_URL!;
+    const endpoint = process.env.LOG_REQUEST_URL as string;
 
     try {
       const response = await fetch(endpoint, {
