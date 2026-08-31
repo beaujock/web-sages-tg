@@ -37,7 +37,7 @@ export default function OnboardingPage() {
       created_by: 'SAGES_ONBOARDING',
     };
 
-    const endpoint = process.env.LOG_REQUEST_URL as string;
+    const endpoint = process.env.NEXT_PUBLIC_LOG_REQUEST_URL as string;
 
     try {
       const response = await fetch(endpoint, {
@@ -60,7 +60,7 @@ export default function OnboardingPage() {
         const errorData = await response.json().catch(() => ({}));
         setStatus({
           type: 'error',
-          message: errorData.message || "Une erreur s'est produite lors de l'envoi.",
+          message: errorData.message,
         });
       }
     } catch (error) {
