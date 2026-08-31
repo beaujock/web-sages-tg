@@ -91,8 +91,8 @@ export default function LoginPage() {
       const expiry_date = data.expiry_date; 
       const menuItems = data.menu_items;
       console.log("connection token : ", connectionToken);
-      const decoded = await decodeToken(connectionToken);
-      console.log("Decoded token : ", decoded);
+      //const decoded = await decodeToken(connectionToken);
+      //console.log("Decoded token : ", decoded);
 
       // Save initial connection context in sessionStorage
       sessionStorage.setItem('tempToken', connectionToken);
@@ -106,10 +106,10 @@ export default function LoginPage() {
       setClientCookie(cookie_name, connectionToken, expiry_date);
 
       // Route based on role count
-      if (decoded.user.roles.length > 1) {
+      if (data.userRoles.length > 1) {
         router.push(`/${clientCode}/selectrole`);
-      } else if (decoded.user.roles.length === 1) {
-        const roleRoute = decoded.user.roles[0].toLocaleLowerCase();
+      } else if (data.userRoles.length.length === 1) {
+        const roleRoute = data.userRoles.length[0].toLocaleLowerCase();
 
           const responseAddUserSession = await fetch(`${API_BASE_URL}/addusersession`, {
             method: 'POST',
