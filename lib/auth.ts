@@ -8,12 +8,20 @@ type resourceCombo = {
   resource_id: string;
 };
 
+type MenuItem = {
+    display_name    : string;
+    icon_name       : string|null;
+    end_route       : string;
+    active          : boolean;
+}
+
 type UserInfos = {
   id: string;
   user_name: string;
   email: string;
   roles: string[];
   resources: resourceCombo[];
+  menu_items : MenuItem[];
 };
 
 export interface DecodedJwtToken {

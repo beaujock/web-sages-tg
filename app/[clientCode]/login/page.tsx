@@ -90,7 +90,7 @@ export default function LoginPage() {
       const effective_date = data.effective_date;
       const expiry_date = data.expiry_date; 
       const menuItems = data.menu_items;
-      console.log("connection token : ", connectionToken);
+      //console.log("connection token : ", connectionToken);
       const decoded = await decodeToken(connectionToken);
       console.log("Decoded token : ", decoded);
 
