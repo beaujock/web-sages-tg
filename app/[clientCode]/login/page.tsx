@@ -28,7 +28,7 @@ export default function LoginPage() {
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
-        const cookieName = sessionStorage.getItem('cookie_name');
+        const cookieName = sessionStorage.getItem('BEAUJOCK_SAGES_TG');
         let token = sessionStorage.getItem('tempToken') || sessionStorage.getItem('token');
 
         // Fallback to reading the cookie if not found in sessionStorage
@@ -90,7 +90,7 @@ export default function LoginPage() {
       const effective_date = data.effective_date;
       const expiry_date = data.expiry_date; 
       const menuItems = data.menu_items;
-      //console.log("connection token : ", connectionToken);
+      console.log("connection token : ", connectionToken);
       const decoded = await decodeToken(connectionToken);
       console.log("Decoded token : ", decoded);
 
