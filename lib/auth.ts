@@ -40,7 +40,7 @@ export interface AuthState {
 
 export async function decodeToken(token: string): Promise<DecodedJwtToken> {
   console.log("Entering decodeToken with token: ", token);
-  const SECRET = process.env.JWT_SECRET as string;
+  const SECRET = process.env.JWT_SECRET! as string;
   console.log("Secret =  ", SECRET);
 
   try {
