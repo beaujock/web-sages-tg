@@ -2,6 +2,7 @@ import { jwtVerify } from 'jose';
 
 export const API_BASE_URL = process.env.NEXT_PUBLIC_SAGES_BASE_URL as string;
 export const JWT_SECRET = process.env.JWT_SECRET as string;
+console.log("Entering Auth to see JWT Secret : ", JWT_SECRET);
 
 type resourceCombo = {
   type_resource: string;
