@@ -3,10 +3,10 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-// 1. Added Download to lucide-react imports
-import { Loader2, School, Eye, Edit, Plus, BookOpen, GraduationCap, Users, Download } from 'lucide-react';
+import { Loader2, School, Eye, Edit, Plus, BookOpen, GraduationCap, Users } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/auth';
 
+// 1. Updated the type definition for the nested structure
 type AdminClientEcoleDisplay = {
     id                      : string,
     full_name               : string,
@@ -40,12 +40,10 @@ export default function EcolesPage({
 }) {
   const { clientCode } = use(params);
   
+  // 2. Updated state to hold the new Overview type
   const [ecolesOverviews, setEcolesOverviews] = useState<AdminClientEcoleOverview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // 2. Added state to handle the PDF download loading UI
-  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const fetchEcoles = async () => {
@@ -69,6 +67,8 @@ export default function EcolesPage({
         }
 
         const jsonData = await res.json();
+        
+        // 3. Updated to look for clientEcolesOverviews in your JSON response
         setEcolesOverviews(Array.isArray(jsonData) ? jsonData : jsonData.clientEcolesOverviews || []);
       } catch (err: any) {
         console.error(err);
@@ -80,48 +80,6 @@ export default function EcolesPage({
 
     fetchEcoles();
   }, [clientCode]);
-
-  // 3. Added the PDF download handler function
-  const handleDownloadPDF = async () => {
-    try {
-      setIsDownloading(true);
-      const token = sessionStorage.getItem('token');
-
-      // Replace '/export/pdf' with your actual API endpoint that generates the PDF
-      const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/exportpdf`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!res.ok) {
-        // Read the error message sent by the backend
-        const errorText = await res.text();
-        console.error("Status de l'erreur:", res.status);
-        console.error("Message du serveur:", errorText);
-        throw new Error(`Erreur ${res.status}: ${errorText}`);
-      }
-
-      // Convert the response to a blob and trigger a browser download
-      const blob = await res.blob();
-      console.log("Blob = ", blob);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      // Set a dynamic file name with the current date
-      a.download = `ecoles_statistiques_${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      alert("Impossible de télécharger le PDF pour le moment. Veuillez vérifier la connexion au serveur.");
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -150,33 +108,13 @@ export default function EcolesPage({
           </p>
         </div>
         
-        {/* 4. Action buttons container */}
-        <div className="flex items-center gap-3">
-          {/* Download PDF Button */}
-          <button
-            onClick={handleDownloadPDF}
-            disabled={isDownloading || ecolesOverviews.length === 0}
-            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 hover:text-teal-primary hover:border-teal-primary/30 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isDownloading ? (
-              <Loader2 className="w-5 h-5 shrink-0 animate-spin" />
-            ) : (
-              <Download className="w-5 h-5 shrink-0" />
-            )}
-            <span className="font-medium hidden sm:inline">
-              {isDownloading ? 'Génération...' : 'Télécharger PDF'}
-            </span>
-          </button>
-
-          {/* Create School Button */}
-          <Link
-            href={`/${clientCode}/admin_client/ecoles/new`}
-            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
-          >
-            <Plus className="w-5 h-5 shrink-0" />
-            <span className="font-medium">Nouvelle école</span>
-          </Link>
-        </div>
+        <Link
+          href={`/${clientCode}/admin_client/ecoles/new`}
+          className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
+        >
+          <Plus className="w-5 h-5 shrink-0" />
+          <span className="font-medium">Nouvelle école</span>
+        </Link>
       </div>
 
       {ecolesOverviews.length === 0 ? (
@@ -195,8 +133,9 @@ export default function EcolesPage({
         </div>
       ) : (
         <div className="flex flex-col space-y-3">
+          {/* 4. Map over ecolesOverviews */}
           {ecolesOverviews.map((overview) => {
-            const ecole = overview.ecole; 
+            const ecole = overview.ecole; // Extract the ecole object for easier reference
             
             return (
               <div 
@@ -215,6 +154,7 @@ export default function EcolesPage({
                 
                 {/* Action Links */}
                 <div className="flex items-center flex-wrap gap-2 shrink-0">
+                  {/* Link to Classrooms (Teal Primary) with Badge */}
                   <Link
                     href={`/${clientCode}/admin_client/ecoles/${ecole.id}/salleclasses`}
                     className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
@@ -227,6 +167,7 @@ export default function EcolesPage({
                     </span>
                   </Link>
 
+                  {/* Link to Teachers (Coral Accent) with Badge */}
                   <Link
                     href={`/${clientCode}/admin_client/ecoles/${ecole.id}/enseignants`}
                     className="group flex items-center space-x-1.5 px-3 py-2 bg-coral-accent/5 border border-coral-accent/30 rounded-lg text-coral-accent hover:bg-coral-accent hover:text-white hover:border-coral-accent transition-colors"
@@ -239,6 +180,7 @@ export default function EcolesPage({
                     </span>
                   </Link>
 
+                  {/* Link to Students (Charcoal Secondary) with Badge */}
                   <Link
                     href={`/${clientCode}/admin_client/ecoles/${ecole.id}/eleves`}
                     className="group flex items-center space-x-1.5 px-3 py-2 bg-charcoal-secondary/5 border border-charcoal-secondary/30 rounded-lg text-charcoal-secondary hover:bg-charcoal-secondary hover:text-white hover:border-charcoal-secondary transition-colors"
@@ -253,6 +195,7 @@ export default function EcolesPage({
 
                   <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block"></div>
 
+                  {/* Details Link */}
                   <Link
                     href={`/${clientCode}/admin_client/ecoles/${ecole.id}`}
                     className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-teal-primary hover:border-teal-primary/50 transition-colors"
@@ -262,6 +205,7 @@ export default function EcolesPage({
                     <span className="hidden xl:inline text-sm font-medium">Détails</span>
                   </Link>
 
+                  {/* Edit Link */}
                   <Link
                     href={`/${clientCode}/admin_client/ecoles/${ecole.id}/edit`}
                     className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-charcoal-secondary hover:border-charcoal-secondary/50 transition-colors"

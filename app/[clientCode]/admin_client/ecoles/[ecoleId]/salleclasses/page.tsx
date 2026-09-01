@@ -11,12 +11,11 @@ import {
   ClipboardCheck, 
   GraduationCap, 
   Eye, 
-  Edit 
+  Edit,
+  Users 
 } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/auth';
 
-// Define a reasonable type for a classroom. 
-// Adjust these fields based on your actual database schema.
 type ClassroomDisplay = {
     id                       : string,
     ecole_id                 : string,
@@ -42,6 +41,8 @@ export default function ClassesPage({
   const { clientCode, ecoleId } = use(params);
   
   const [classes, setClasses] = useState<ClassroomDisplay[]>([]);
+  // Added state to store the school name independently
+  const [schoolName, setSchoolName] = useState<string>("l'école");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -54,7 +55,6 @@ export default function ClassesPage({
           throw new Error("Aucun jeton d'authentification trouvé. Veuillez vous reconnecter.");
         }
 
-        // Adjust the endpoint to match your API for fetching classes of a specific school
         const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`, {
           method: 'GET',
           headers: {
@@ -63,13 +63,26 @@ export default function ClassesPage({
           },
         });
 
+        const jsonData = await res.json();
+        
+        if (res.status === 400 ) throw new Error(Array.isArray(jsonData) ? jsonData : jsonData.message || []);
+
         if (!res.ok) {
-          throw new Error('Erreur lors de la récupération de la liste des classes');
+          throw new Error('Erreur lors de la récupération de la liste des classes. Contactez votre administrateur');
         }
 
-        const jsonData = await res.json();
+        // 1. Set the classes array
         setClasses(Array.isArray(jsonData) ? jsonData : jsonData.salleClasses || []);
-        console.log("Classes = ", jsonData.salleClasses);
+        
+        // 2. Extract and set the school name from the parent record
+        if (!Array.isArray(jsonData) && jsonData.ecole) {
+          // Adjust "short_name" or "full_name" based on your exact API property names
+          setSchoolName(jsonData.ecole.short_name || jsonData.ecole.full_name || "l'école");
+        } else if (Array.isArray(jsonData) && jsonData.length > 0) {
+          // Safe fallback just in case the API returns a flat array
+          setSchoolName(jsonData[0].ecole_label || "l'école");
+        }
+
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Une erreur est survenue');
@@ -103,13 +116,15 @@ export default function ClassesPage({
       {/* ================= HEADER ================= */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-charcoal-secondary">Liste des Classes</h2>
+          {/* Header now strictly uses the state variable */}
+          <h2 className="text-2xl font-bold text-charcoal-secondary">
+            Classes ({schoolName})
+          </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Gérez les classes de cette école, leurs emplois du temps et évaluations.
+            Accès aux classes, leurs élèves, emplois du temps, évaluations et enseignants
           </p>
         </div>
         
-        {/* Button to add a classroom */}
         <Link
           href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/new`}
           className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
@@ -151,14 +166,21 @@ export default function ClassesPage({
                   <h3 className="font-semibold text-charcoal-secondary truncate" title={cls.code}>
                     {cls.code || 'Classe sans nom'}
                   </h3>
-
                 </div>
               </div>
               
               {/* Action Links */}
               <div className="flex items-center flex-wrap gap-2 shrink-0">
                 
-                {/* Link to Timetable (Teal Primary) */}
+                <Link
+                  href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/eleves`}
+                  className="flex items-center space-x-1.5 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-colors"
+                  title="Élèves"
+                >
+                  <Users className="w-4 h-4 shrink-0" />
+                  <span className="hidden md:inline text-sm font-medium">Élèves</span>
+                </Link>
+
                 <Link
                   href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/emploi-du-temps`}
                   className="flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
@@ -168,7 +190,6 @@ export default function ClassesPage({
                   <span className="hidden md:inline text-sm font-medium">Emploi du temps</span>
                 </Link>
 
-                {/* Link to Evaluations (Coral Accent) */}
                 <Link
                   href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/evaluations`}
                   className="flex items-center space-x-1.5 px-3 py-2 bg-coral-accent/5 border border-coral-accent/30 rounded-lg text-coral-accent hover:bg-coral-accent hover:text-white hover:border-coral-accent transition-colors"
@@ -178,7 +199,6 @@ export default function ClassesPage({
                   <span className="hidden md:inline text-sm font-medium">Évaluations</span>
                 </Link>
 
-                {/* Link to Teachers (Charcoal Secondary) */}
                 <Link
                   href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/enseignants`}
                   className="flex items-center space-x-1.5 px-3 py-2 bg-charcoal-secondary/5 border border-charcoal-secondary/30 rounded-lg text-charcoal-secondary hover:bg-charcoal-secondary hover:text-white hover:border-charcoal-secondary transition-colors"
@@ -190,7 +210,6 @@ export default function ClassesPage({
 
                 <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block"></div>
 
-                {/* Details & Edit Links */}
                 <Link
                   href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}`}
                   className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-teal-primary hover:border-teal-primary/50 transition-colors"
