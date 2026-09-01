@@ -28,7 +28,7 @@ export default function LoginPage() {
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
-        const cookieName = sessionStorage.getItem('BEAUJOCK_SAGES_TG');
+        const cookieName = sessionStorage.getItem('cookie_name');
         let token = sessionStorage.getItem('tempToken') || sessionStorage.getItem('token');
 
         // Fallback to reading the cookie if not found in sessionStorage
