@@ -84,13 +84,13 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
 
   return (
     <aside className="w-16 md:w-64 min-h-screen bg-[#2D3748] text-white flex flex-col shadow-lg flex-shrink-0 transition-all duration-300">
-      
       {/* Sidebar Header */}
+      {/*
       <div className="p-4 md:p-6 border-b border-gray-700 bg-[#1a202c] flex items-center justify-center md:justify-start h-16 md:h-auto">
         <h1 className="hidden md:block text-xl font-bold tracking-wide truncate">{roleTitle}</h1>
         <LayoutDashboard className="w-6 h-6 md:hidden text-white" />
       </div>
-      
+      */}
       {/* Navigation Links */}
       <nav className="flex-1 p-2 md:p-4 space-y-2 overflow-y-auto">
         
