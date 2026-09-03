@@ -54,6 +54,8 @@ export default function ClassesPage({
         if (!token) {
           throw new Error("Aucun jeton d'authentification trouvé. Veuillez vous reconnecter.");
         }
+        console.log("Client Code = ", clientCode);
+        console.log("Ecole ID = ", ecoleId);
 
         const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`, {
           method: 'GET',
@@ -64,11 +66,12 @@ export default function ClassesPage({
         });
 
         const jsonData = await res.json();
+        console.log("json Data = ", jsonData);
         
         if (res.status === 400 ) throw new Error(Array.isArray(jsonData) ? jsonData : jsonData.message || []);
 
         if (!res.ok) {
-          throw new Error('Erreur lors de la récupération de la liste des classes. Contactez votre administrateur');
+          throw new Error(Array.isArray(jsonData) ? jsonData : jsonData.message || []);
         }
 
         // 1. Set the classes array
@@ -96,7 +99,7 @@ export default function ClassesPage({
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
+      <div className="flex flex-col items-center justify-center min-h-100">
         <Loader2 className="w-8 h-8 text-teal-primary animate-spin mb-4" />
         <p className="text-gray-500">Chargement des classes...</p>
       </div>

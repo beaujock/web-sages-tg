@@ -136,7 +136,7 @@ export default function EditEcolePage({
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
+      <div className="flex flex-col items-center justify-center min-h-100">
         <Loader2 className="w-8 h-8 text-teal-600 animate-spin mb-4" />
         <p className="text-gray-500">Chargement du formulaire...</p>
       </div>

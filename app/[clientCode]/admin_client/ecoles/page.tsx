@@ -125,7 +125,7 @@ export default function EcolesPage({
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
+      <div className="flex flex-col items-center justify-center min-h-100">
         <Loader2 className="w-8 h-8 text-teal-primary animate-spin mb-4" />
         <p className="text-gray-500">Chargement des écoles...</p>
       </div>
@@ -222,7 +222,7 @@ export default function EcolesPage({
                   >
                     <BookOpen className="w-4 h-4 shrink-0" />
                     <span className="hidden xl:inline text-sm font-medium">Classes</span>
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 ml-1 text-xs font-bold bg-teal-primary/10 text-teal-primary rounded-full group-hover:bg-white group-hover:text-teal-primary transition-colors">
+                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 ml-1 text-xs font-bold bg-teal-primary/10 text-teal-primary rounded-full group-hover:bg-white group-hover:text-teal-primary transition-colors">
                       {overview.numberSalleClasses}
                     </span>
                   </Link>
@@ -234,7 +234,7 @@ export default function EcolesPage({
                   >
                     <GraduationCap className="w-4 h-4 shrink-0" />
                     <span className="hidden xl:inline text-sm font-medium">Enseignants</span>
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 ml-1 text-xs font-bold bg-coral-accent/10 text-coral-accent rounded-full group-hover:bg-white group-hover:text-coral-accent transition-colors">
+                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 ml-1 text-xs font-bold bg-coral-accent/10 text-coral-accent rounded-full group-hover:bg-white group-hover:text-coral-accent transition-colors">
                       {overview.numberEnseignants}
                     </span>
                   </Link>
@@ -246,7 +246,7 @@ export default function EcolesPage({
                   >
                     <Users className="w-4 h-4 shrink-0" />
                     <span className="hidden xl:inline text-sm font-medium">Élèves</span>
-                    <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 ml-1 text-xs font-bold bg-charcoal-secondary/10 text-charcoal-secondary rounded-full group-hover:bg-white group-hover:text-charcoal-secondary transition-colors">
+                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 ml-1 text-xs font-bold bg-charcoal-secondary/10 text-charcoal-secondary rounded-full group-hover:bg-white group-hover:text-charcoal-secondary transition-colors">
                       {overview.numberEleves}
                     </span>
                   </Link>
