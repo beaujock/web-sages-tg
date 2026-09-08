@@ -8,7 +8,6 @@ import {
   Tooltip, 
   Legend 
 } from 'recharts';
-import { Users, User, Heart } from 'lucide-react';
 
 interface StudentGenderChartProps {
   boysCount?: number;
@@ -62,27 +61,27 @@ export function StudentGenderChart({
         </div>
         
         {/* Boys */}
-        <div className="p-3 bg-[#007791] bg-opacity-5 rounded-md border border-[#007791]/30 flex flex-col items-center justify-center text-center">
+        <div className="p-3 bg-teal-primary bg-opacity-5 rounded-md border border-teal-primary/30 flex flex-col items-center justify-center text-center">
           <div className="flex items-center gap-2 mb-2">
             
             <p className="text-sm text-gray-900 font-bold">Garçons</p>
           </div>
           <p className="text-2xl lg:text-3xl font-black text-gray-900 leading-none">{boysCount}</p>
           {/* Converted percentage to a high-contrast badge */}
-          <span className="text-xs font-black text-white bg-[#007791] px-2 py-0.5 rounded-full mt-2 shadow-sm">
+          <span className="text-xs font-black text-white bg-teal-primary px-2 py-0.5 rounded-full mt-2 shadow-sm">
             {boysPercentage}%
           </span>
         </div>
         
         {/* Girls */}
-        <div className="p-3 bg-[#FF6B6B] bg-opacity-5 rounded-md border border-[#FF6B6B]/30 flex flex-col items-center justify-center text-center">
+        <div className="p-3 bg-coral-accent bg-opacity-5 rounded-md border border-coral-accent/30 flex flex-col items-center justify-center text-center">
           <div className="flex items-center gap-2 mb-2">
             
             <p className="text-sm text-gray-900 font-bold">Filles</p>
           </div>
           <p className="text-2xl lg:text-3xl font-black text-gray-900 leading-none">{girlsCount}</p>
           {/* Converted percentage to a high-contrast badge */}
-          <span className="text-xs font-black text-white bg-[#FF6B6B] px-2 py-0.5 rounded-full mt-2 shadow-sm">
+          <span className="text-xs font-black text-white bg-coral-accent px-2 py-0.5 rounded-full mt-2 shadow-sm">
             {girlsPercentage}%
           </span>
         </div>

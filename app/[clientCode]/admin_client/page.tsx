@@ -4,7 +4,8 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { School, Layers, Users, ArrowRight, Loader2 } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/auth';
+import { API_BASE_URL, getCookie } from '@/lib/auth';
+import { useRouter } from 'next/navigation';
 
 type DashboardData = {
   clientEcoles: any[] | number;
@@ -17,6 +18,7 @@ export default function AdminClientDashboard({
 }: {
   params: Promise<{ clientCode: string }>;
 }) {
+  const router = useRouter();
   // Unwrap the params using React.use() since it's a Promise in Next.js 15+
   const { clientCode } = use(params);
   
@@ -27,30 +29,32 @@ export default function AdminClientDashboard({
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        // 1. Retrieve the token from sessionStorage
-        //console.log("Entering fetchDashboardData");
-        const token = sessionStorage.getItem('token');
-        //console.log("Token retrieved from sessionStorage:", token);
-
+        let token = sessionStorage.getItem('token') || sessionStorage.getItem('tempToken') || null;
+        const cookieName = sessionStorage.getItem('cookie_name');
+        if (!token && cookieName) {
+          token = getCookie(cookieName) || null;
+        }
         if (!token) {
-          throw new Error("Aucun jeton d'authentification trouvé. Veuillez vous reconnecter.");
+          router.push(`/${clientCode}/login`);
         }
+        else
+        {
+            // 2. Attach it as a Bearer token in the headers
+            const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+            });
 
-        // 2. Attach it as a Bearer token in the headers
-        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+            if (!res.ok) {
+              throw new Error('Erreur lors de la récupération des données du tableau de bord');
+            }
 
-        if (!res.ok) {
-          throw new Error('Erreur lors de la récupération des données du tableau de bord');
+            const jsonData = await res.json();
+            setData(jsonData);
         }
-
-        const jsonData = await res.json();
-        setData(jsonData);
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Une erreur est survenue');
@@ -60,7 +64,7 @@ export default function AdminClientDashboard({
     };
 
     fetchDashboardData();
-  }, [clientCode]);
+  }, [clientCode, router]);
 
   // Handle Loading State
   if (loading) {

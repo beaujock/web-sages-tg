@@ -70,7 +70,7 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
   if (loading) {
     return (
       <aside className="w-16 md:w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col p-4 md:p-6 transition-all duration-300">
-        <div className="animate-pulse text-[#2D3748] hidden md:block">Chargement...</div>
+        <div className="animate-pulse text-charcoal-secondary hidden md:block">Chargement...</div>
       </aside>
     );
   }
@@ -83,7 +83,7 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
   const isDashboardActive = pathname === dashboardHref || pathname === '/';
 
   return (
-    <aside className="w-16 md:w-64 min-h-screen bg-[#2D3748] text-white flex flex-col shadow-lg flex-shrink-0 transition-all duration-300">
+    <aside className="w-16 md:w-64 min-h-screen bg-charcoal-secondary text-white flex flex-col shadow-lg shrink-0 transition-all duration-300">
       {/* Sidebar Header */}
       {/*
       <div className="p-4 md:p-6 border-b border-gray-700 bg-[#1a202c] flex items-center justify-center md:justify-start h-16 md:h-auto">
@@ -99,12 +99,12 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
           href={dashboardHref}
           className={`flex items-center justify-center md:justify-start md:space-x-3 px-2 md:px-4 py-3 rounded-md transition-all duration-200 ${
             isDashboardActive 
-              ? 'bg-[#007791] text-white' 
-              : 'text-gray-300 hover:bg-[#007791] hover:bg-opacity-20 hover:text-white'
+              ? 'bg-teal-primary text-white' 
+              : 'text-gray-300 hover:bg-teal-primary hover:bg-opacity-20 hover:text-white'
           }`}
           title="Tableau de bord"
         >
-          <LayoutDashboard className="w-5 h-5 flex-shrink-0" strokeWidth={isDashboardActive ? 2 : 1.5} />
+          <LayoutDashboard className="w-5 h-5 shrink-0" strokeWidth={isDashboardActive ? 2 : 1.5} />
           <span className="hidden md:block font-medium text-sm truncate">Tableau de bord</span>
         </Link>
 
@@ -122,17 +122,17 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
               href={href}
               className={`flex items-center justify-center md:justify-start md:space-x-3 px-2 md:px-4 py-3 rounded-md transition-all duration-200 ${
                 isActive 
-                  ? 'bg-[#007791] text-white' 
-                  : 'text-gray-300 hover:bg-[#007791] hover:bg-opacity-20 hover:text-white'
+                  ? 'bg-teal-primary text-white' 
+                  : 'text-gray-300 hover:bg-teal-primary hover:bg-opacity-20 hover:text-white'
               }`}
               title={item.display_name} 
             >
-              <IconComponent className="w-5 h-5 flex-shrink-0" strokeWidth={isActive ? 2 : 1.5} />
+              <IconComponent className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2 : 1.5} />
               <span className="hidden md:block font-medium text-sm truncate">{item.display_name}</span>
             </Link>
           );
         }) : (
-          <span className="text-[#FF6B6B] text-sm px-2 md:px-4 hidden md:block">Aucun menu disponible.</span>
+          <span className="text-coral-accent text-sm px-2 md:px-4 hidden md:block">Aucun menu disponible.</span>
         )}
       </nav>
 
@@ -142,12 +142,12 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
           href={settingsHref}
           className={`flex items-center justify-center md:justify-start md:space-x-3 w-full px-2 md:px-4 py-2.5 rounded-md transition-all duration-200 ${
             isSettingsActive
-              ? 'bg-[#007791] text-white' 
-              : 'text-gray-300 hover:bg-[#007791] hover:bg-opacity-20 hover:text-white'
+              ? 'bg-teal-primary text-white' 
+              : 'text-gray-300 hover:bg-teal-primary hover:bg-opacity-20 hover:text-white'
           }`}
           title="Paramétrages"
         >
-          <Settings className="w-5 h-5 flex-shrink-0" strokeWidth={isSettingsActive ? 2 : 1.5} />
+          <Settings className="w-5 h-5 shrink-0" strokeWidth={isSettingsActive ? 2 : 1.5} />
           <span className="hidden md:block font-medium text-sm truncate">Paramétrages</span>
         </Link>
 
@@ -156,11 +156,11 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
           className="flex items-center justify-center md:justify-start md:space-x-3 w-full px-2 md:px-4 py-2.5 rounded-md text-gray-300 hover:bg-[#FF6B6B] hover:text-white transition-all duration-200"
           title="Se déconnecter"
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" strokeWidth={1.5} />
+          <LogOut className="w-5 h-5 shrink-0" strokeWidth={1.5} />
           <span className="hidden md:block font-medium text-sm truncate">Se déconnecter</span>
         </button>
 
-        <div className="hidden md:block text-xs text-gray-500 text-center mt-2">SAGES</div>
+        {/*<div className="hidden md:block text-xs text-gray-500 text-center mt-2">SAGES</div>*/}
       </div>
     </aside>
   );

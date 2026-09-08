@@ -3,9 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { API_BASE_URL, decodeToken, setClientCookie } from '@/lib/auth';
+import { API_BASE_URL, callDecodeToken, callGetUserConnectionInfos, getCookie, setClientCookie } from '@/lib/auth';
 
 // Helper function to retrieve a cookie by its name
+/*
 const getCookie = (name: string) => {
   if (typeof document === 'undefined') return null;
   const value = `; ${document.cookie}`;
@@ -13,6 +14,7 @@ const getCookie = (name: string) => {
   if (parts.length === 2) return parts.pop()?.split(';').shift();
   return null;
 };
+*/
 
 export default function LoginPage() {
   const router = useRouter();
@@ -24,12 +26,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // --- NEW: Check for existing cookie/token on page load ---
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
-        const cookieName = sessionStorage.getItem('cookie_name');
-        let token = sessionStorage.getItem('tempToken') || sessionStorage.getItem('token');
+        const cookieName = sessionStorage.getItem('cookie_name')||null; //return 'BEAUJOCK_SAGES_TG'
+        let token = sessionStorage.getItem('token') || sessionStorage.getItem('tempToken') || null;
 
         // Fallback to reading the cookie if not found in sessionStorage
         if (!token && cookieName) {
@@ -37,14 +38,23 @@ export default function LoginPage() {
         }
 
         if (token && clientCode) {
-          const decoded = await decodeToken(token);
-          
-          if (decoded?.user?.roles) {
+          const decoded = await callDecodeToken(token);
+          if (!decoded || decoded === null) {
+            throw new Error("Veuillez vous reconnecter.");
+          }
+          const userInfos = await callGetUserConnectionInfos(clientCode, decoded.user_id);
+          if (!userInfos || userInfos === null) {
+            throw new Error("Impossible de récupérer vos informations Veuillez vous reconnecter.");
+          }
+          if (userInfos.roles.length === 0) {
+            throw new Error("Vous n'avez aucun rôle assigné. Veuillez vous reconnecter ou contactez votre administrateur.");
+          }
+          if (userInfos.roles) {
             // Redirect based on role count just like in handleLogin
-            if (decoded.user.roles.length > 1) {
+            if (userInfos.roles.length > 1) {
               router.push(`/${clientCode}/selectrole`);
-            } else if (decoded.user.roles.length === 1) {
-              const roleRoute = decoded.user.roles[0].toLocaleLowerCase();
+            } else if (userInfos.roles.length === 1) {
+              const roleRoute = userInfos.roles[0].toLocaleLowerCase();
               router.push(`/${clientCode}/${roleRoute}`);
             }
           }
@@ -59,12 +69,13 @@ export default function LoginPage() {
 
     checkExistingSession();
   }, [clientCode, router]);
-  // ---------------------------------------------------------
 
-  const handleLogin = async (e: React.FormEvent) => {
+
+  const handleLogin = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
 
     try {
       const res = await fetch(`${API_BASE_URL}/login`, {
@@ -81,55 +92,64 @@ export default function LoginPage() {
         throw new Error("Echec authentification.\nVérifier vos information d'identification.");
       }
       
-      console.log("Response : ", res);
+      //console.log("Response : ", res);
       const data = await res.json();
-      console.log("Data : ", data);
+      //console.log("Data : ", data);
       
       const connectionToken = data.connectionToken;
+      if (!connectionToken) {
+        throw new Error("Echec authentification.\nVérifier vos information d'identification.");
+      };
+      
+
+      const firstLogin = data.first_login;
       const cookie_name = data.cookie_name;
-      const effective_date = data.effective_date;
-      const expiry_date = data.expiry_date; 
       const menuItems = data.menu_items;
-      console.log("connection token : ", connectionToken);
-      //const decoded = await decodeToken(connectionToken);
-      //console.log("Decoded token : ", decoded);
+      //const resources = data.resources;
+      const userRoles = data.roles;
+      const effective_date = data.effective_date;
+      const expiry_date = data.expiry_date;
 
       // Save initial connection context in sessionStorage
       sessionStorage.setItem('tempToken', connectionToken);
       sessionStorage.setItem('cookie_name', cookie_name);
-
-      // Save menu items in sessionStorage
       sessionStorage.setItem('menuItems', JSON.stringify(menuItems));
-      console.log("Menu items saved in sessionStorage: ", menuItems);
+      //console.log("Menu Items stored in sessionStorage: ", menuItems);
 
       // Store browser cookie
       setClientCookie(cookie_name, connectionToken, expiry_date);
 
+      if (firstLogin) {
+        router.push(`/${clientCode}/changepassword`);
+        return;
+      }
+
       // Route based on role count
-      if (data.userRoles.length > 1) {
+      if (userRoles.length > 1) {
+        sessionStorage.setItem('userRoles', JSON.stringify(userRoles));
         router.push(`/${clientCode}/selectrole`);
-      } else if (data.userRoles.length === 1) {
-        const roleRoute = data.userRoles[0].toLocaleLowerCase();
+      } else if (userRoles.length === 1) {
+        const roleRoute = userRoles[0].toLowerCase();
 
           const responseAddUserSession = await fetch(`${API_BASE_URL}/addusersession`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               token: connectionToken,
-              token_effective_time: effective_date,
-              token_expiry_time: expiry_date,
+              token_effective_time: new Date(effective_date),
+              token_expiry_time: new Date(expiry_date),
             }),
           });
           if (!responseAddUserSession.ok) {
-            throw new Error("Echec ajout jeton utilisateur.");
+            throw new Error("Echec authentification. Réessayez ou contactez votre administrateur.");
           };
         sessionStorage.setItem('token', connectionToken);
         router.push(`/${clientCode}/${roleRoute}`);
       } else {
-        setError('Aucun role associé avec ce compte');
+        setError('Aucun role associé avec ce compte. Reconnectez vous ou contactez votre administrateur.');
       }
     } catch (err: any) {
-      setError(err.message || "Une erreur d'authentification de l'utilisateur s'est produite");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
