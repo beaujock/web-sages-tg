@@ -59,19 +59,6 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
           setLoading(false);
           return;
         }
-
-        // Fetch dynamic connection info
-        /**
-         * const responseAddUserSession = await fetch(`${API_BASE_URL}/addusersession`, {
-                     method: 'POST',
-                     headers: { 'Content-Type': 'application/json' },
-                     body: JSON.stringify({
-                       token: connectionToken,
-                       token_effective_time: new Date(effective_date),
-                       token_expiry_time: new Date(expiry_date),
-                     }),
-                   });
-         */
         const response = await fetch(`${API_BASE_URL}/${clientCode}/${roleCode}/${userId}/connectioninfos`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
@@ -85,12 +72,12 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
         console.log("Connection infos data", data);
         
         // Adjust these property accesses depending on your exact API response structure
-        if (data.userInfos.menu_items) {
+        if (data.userRoleInfos.menu_items) {
             setMenuItems(data.userInfos.menu_items.filter((item: SagesMenuItem) => item.active));
         }
 
         // Optional: Update full name if the API returns it
-        if (data.userInfos.full_name) {
+        if (data.userRoleInfos.full_name) {
             setUserFullName(data.userInfos.full_name);
         }
 
