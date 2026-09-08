@@ -50,7 +50,6 @@ export default function LoginPage() {
             throw new Error("Vous n'avez aucun rôle assigné. Veuillez vous reconnecter ou contactez votre administrateur.");
           }
           if (userInfos.roles) {
-            // Redirect based on role count just like in handleLogin
             if (userInfos.roles.length > 1) {
               router.push(`/${clientCode}/selectrole`);
             } else if (userInfos.roles.length === 1) {
@@ -112,7 +111,7 @@ export default function LoginPage() {
       const user_full_name = data.user_full_name;
 
       // Save initial connection context in sessionStorage
-      sessionStorage.setItem('tempToken', connectionToken);
+      sessionStorage.setItem('token', connectionToken);
       sessionStorage.setItem('cookie_name', cookie_name);
       sessionStorage.setItem('menuItems', JSON.stringify(menuItems));
       sessionStorage.setItem('user_full_name', user_full_name);

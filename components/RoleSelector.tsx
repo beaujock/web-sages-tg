@@ -13,8 +13,9 @@ export function RoleSelector({ clientCode }: { clientCode: string }) {
     // Retrieve roles stored during the initial login step
     const storedRoles = sessionStorage.getItem('userRoles');
     if (storedRoles) {
+      const listRoles = JSON.parse(storedRoles);
+      if (listRoles.length === 1) router.push(`/${clientCode}/${listRoles[0].toLowerCase()}`);
       setRoles(JSON.parse(storedRoles));
-      //console.log("Parsed roles", JSON.parse(storedRoles));
     } else {
       // Fallback if no roles are found
       router.push(`/${clientCode}/login`);

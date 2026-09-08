@@ -114,8 +114,8 @@ export async function callGetUserConnectionInfos(clientCode:string, userId:strin
           if (!resGetUserConnection.ok) {
             return null;
           }
-          const detauilResponse = await resGetUserConnection.json();
-          return detauilResponse.userInfos as UserInfos;
+          const detailResponse = await resGetUserConnection.json();
+          return detailResponse.userInfos as UserInfos;
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       catch (error) {
