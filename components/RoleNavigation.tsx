@@ -73,12 +73,12 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
         
         // Adjust these property accesses depending on your exact API response structure
         if (data.userRoleInfos.menu_items) {
-            setMenuItems(data.userInfos.menu_items.filter((item: SagesMenuItem) => item.active));
+            setMenuItems(data.userRoleInfos.menu_items.filter((item: SagesMenuItem) => item.active));
         }
 
         // Optional: Update full name if the API returns it
         if (data.userRoleInfos.full_name) {
-            setUserFullName(data.userInfos.full_name);
+            setUserFullName(data.userRoleInfos.full_name);
         }
 
       } catch (error) {
