@@ -19,7 +19,7 @@ export default function AdminClientDashboard({
   params: Promise<{ clientCode: string }>;
 }) {
   const router = useRouter();
-  // Unwrap the params using React.use() since it's a Promise in Next.js 15+
+
   const { clientCode } = use(params);
   
   const [data, setData] = useState<DashboardData | null>(null);
@@ -127,7 +127,7 @@ export default function AdminClientDashboard({
       <div>
         <h2 className="text-2xl font-bold text-gray-800">Vue d&apos;ensemble</h2>
         <p className="text-sm text-gray-500 mt-1">
-          Statistiques principales de votre environnement client.
+          Environement client.
         </p>
       </div>
 

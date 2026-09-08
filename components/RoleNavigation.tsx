@@ -14,6 +14,7 @@ import {
   Settings, ShieldCheck, Database, HelpCircle,
   LayoutTemplate, LogOut
 } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/auth';
 
 type SagesMenuItem = {
   display_name: string;
@@ -22,7 +23,6 @@ type SagesMenuItem = {
   active: boolean;
 };
 
-// Connect DB strings to React components
 const iconMap: Record<string, React.ElementType> = {
   'layout-dashboard': LayoutDashboard,
   'users': Users,
@@ -39,24 +39,70 @@ const iconMap: Record<string, React.ElementType> = {
   'bell': Bell,
 };
 
-export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle: string, roleCode: string, clientCode: string }) {
+export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, clientCode: string }) {
   const [menuItems, setMenuItems] = useState<SagesMenuItem[]>([]);
+  const [userFullName, setUserFullName] = useState<string>(''); 
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    const storedMenus = sessionStorage.getItem('menuItems');
-    if (storedMenus) {
+    const fetchConnectionInfos = async () => {
       try {
-        const parsed = JSON.parse(storedMenus) as SagesMenuItem[];
-        setMenuItems(parsed.filter(item => item.active));
+        // Retrieve userId from session storage
+        const userId = sessionStorage.getItem('user_id');
+        const storedName = sessionStorage.getItem('user_full_name') || '<Utilisateur>';
+        setUserFullName(storedName);
+
+        if (!userId) {
+          console.warn("No userId found in session storage.");
+          setLoading(false);
+          return;
+        }
+
+        // Fetch dynamic connection info
+        /**
+         * const responseAddUserSession = await fetch(`${API_BASE_URL}/addusersession`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                       token: connectionToken,
+                       token_effective_time: new Date(effective_date),
+                       token_expiry_time: new Date(expiry_date),
+                     }),
+                   });
+         */
+        const response = await fetch(`${API_BASE_URL}/${clientCode}/${roleCode}/${userId}/connectioninfos`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch connection infos');
+        }
+
+        const data = await response.json();
+        console.log("Connection infos data", data);
+        
+        // Adjust these property accesses depending on your exact API response structure
+        if (data.userInfos.menu_items) {
+            setMenuItems(data.userInfos.menu_items.filter((item: SagesMenuItem) => item.active));
+        }
+
+        // Optional: Update full name if the API returns it
+        if (data.userInfos.full_name) {
+            setUserFullName(data.userInfos.full_name);
+        }
+
       } catch (error) {
-        console.error("Failed to parse menu items", error);
+        console.error("Failed to load connection infos:", error);
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
-  }, []);
+    };
+
+    fetchConnectionInfos();
+  }, [clientCode, roleCode]);
 
   const handleLogout = () => {
     const cookieName = sessionStorage.getItem('cookie_name');
@@ -78,23 +124,22 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
   const settingsHref = `/${clientCode}/settings`;
   const isSettingsActive = pathname === settingsHref;
 
-  // The base dashboard route for the current role
   const dashboardHref = `/${clientCode}/${roleCode}`;
   const isDashboardActive = pathname === dashboardHref || pathname === '/';
 
   return (
     <aside className="w-16 md:w-64 min-h-screen bg-charcoal-secondary text-white flex flex-col shadow-lg shrink-0 transition-all duration-300">
-      {/* Sidebar Header */}
-      {/*
-      <div className="p-4 md:p-6 border-b border-gray-700 bg-[#1a202c] flex items-center justify-center md:justify-start h-16 md:h-auto">
-        <h1 className="hidden md:block text-xl font-bold tracking-wide truncate">{roleTitle}</h1>
-        <LayoutDashboard className="w-6 h-6 md:hidden text-white" />
-      </div>
-      */}
-      {/* Navigation Links */}
+      
       <nav className="flex-1 p-2 md:p-4 space-y-2 overflow-y-auto">
         
-        {/* Dashboard Link - Now acts as the default active link for the role root */}
+        <div className="hidden md:flex flex-col px-2 md:px-4 py-2 mb-2 border-b border-gray-700/50 pb-4">
+          <div className="flex items-center space-x-2">
+            <UserCheck className="w-4 h-4 text-teal-primary" />
+            <span className="font-semibold text-sm truncate text-white">{userFullName}</span>
+          </div>
+        </div>
+
+        {/* Dashboard Link */}
         <Link 
           href={dashboardHref}
           className={`flex items-center justify-center md:justify-start md:space-x-3 px-2 md:px-4 py-3 rounded-md transition-all duration-200 ${
@@ -136,7 +181,7 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
         )}
       </nav>
 
-      {/* Sidebar Footer with Settings and Logout */}
+      {/* Sidebar Footer */}
       <div className="p-2 md:p-4 border-t border-gray-700 flex flex-col space-y-2">
         <Link 
           href={settingsHref}
@@ -159,8 +204,6 @@ export function RoleNavigation({ roleTitle, roleCode, clientCode }: { roleTitle:
           <LogOut className="w-5 h-5 shrink-0" strokeWidth={1.5} />
           <span className="hidden md:block font-medium text-sm truncate">Se déconnecter</span>
         </button>
-
-        {/*<div className="hidden md:block text-xs text-gray-500 text-center mt-2">SAGES</div>*/}
       </div>
     </aside>
   );

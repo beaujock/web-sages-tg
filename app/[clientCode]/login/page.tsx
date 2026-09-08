@@ -94,14 +94,14 @@ export default function LoginPage() {
       
       //console.log("Response : ", res);
       const data = await res.json();
-      //console.log("Data : ", data);
+      console.log("Data : ", data);
       
       const connectionToken = data.connectionToken;
       if (!connectionToken) {
         throw new Error("Echec authentification.\nVérifier vos information d'identification.");
       };
       
-
+      const userId = data.user_id;
       const firstLogin = data.first_login;
       const cookie_name = data.cookie_name;
       const menuItems = data.menu_items;
@@ -109,11 +109,16 @@ export default function LoginPage() {
       const userRoles = data.roles;
       const effective_date = data.effective_date;
       const expiry_date = data.expiry_date;
+      const user_full_name = data.user_full_name;
 
       // Save initial connection context in sessionStorage
       sessionStorage.setItem('tempToken', connectionToken);
       sessionStorage.setItem('cookie_name', cookie_name);
       sessionStorage.setItem('menuItems', JSON.stringify(menuItems));
+      sessionStorage.setItem('user_full_name', user_full_name);
+      sessionStorage.setItem('user_id', userId);
+
+      //sessionStorage.setItem('userRoles', JSON.stringify(userRoles));
       //console.log("Menu Items stored in sessionStorage: ", menuItems);
 
       // Store browser cookie
