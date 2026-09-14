@@ -52,16 +52,20 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
         // Retrieve userId from session storage
         const userId = sessionStorage.getItem('user_id');
         const storedName = sessionStorage.getItem('user_full_name') || '<Utilisateur>';
+        const connectionToken = sessionStorage.getItem('token');
         setUserFullName(storedName);
 
-        if (!userId) {
-          console.warn("No userId found in session storage.");
+        if (!connectionToken) {
+          console.warn("No token found in session storage.");
           setLoading(false);
           return;
         }
-        const response = await fetch(`${API_BASE_URL}/${clientCode}/${roleCode}/${userId}/connectioninfos`, {
+        const response = await fetch(`${API_BASE_URL}/${clientCode}/${roleCode}/$/connectioninfos`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${connectionToken}`,
+          },
         });
         
         if (!response.ok) {
