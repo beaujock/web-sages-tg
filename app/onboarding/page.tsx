@@ -191,10 +191,11 @@ export default function OnboardingPage() {
                   <option value="" disabled>
                     Choisir une option
                   </option>
-                  <option value="Directeur">Directeur</option>
                   <option value="Fondateur">Fondateur</option>
+                  <option value="Directeur">Directeur</option>
                   <option value="Surveillant">Surveillant</option>
                   <option value="Secrétaire">Secrétaire</option>
+                  <option value="Secrétaire">Enseignant</option>
                   <option value="Autre personnel">Autre personnel</option>
                 </select>
               </div>
