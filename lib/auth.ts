@@ -46,6 +46,12 @@ export interface AuthState {
 }
 */
 
+type UserVerificationInfo = {
+  userId : string;
+  userFullName : string;
+  message : string|null;
+}
+
 // Helper function to retrieve a cookie by its name
 export function getCookie (name: string)  {
   if (typeof document === 'undefined') return null;
@@ -80,6 +86,34 @@ export function setClientCookie(cookieName: string, token: string, expiryDate?: 
   document.cookie = `${cookieName}=${token}; path=/${expires}; SameSite=Lax; Secure`;
 }
 
+export async function verifyUser(token: string): Promise<UserVerificationInfo | null> {
+  try {
+          const resDecode = await fetch(`${API_BASE_URL}/decodetoken`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              connectionToken : token,
+            }),
+          });
+
+          if (!resDecode.ok) {
+            return null
+          }
+          const data = await resDecode.json();
+          if (data.userId===null && data.userFullName===null) return null;
+          return {
+            userId : data.userId,
+            userFullName : data.userFullName,
+            message : data.message
+          }
+
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      catch (error) {
+        return null;
+      }
+}
+
 export async function callDecodeToken(token: string): Promise<DecodedJwtToken | null> {
   try {
           const resDecode = await fetch(`${API_BASE_URL}/decodetoken`, {
@@ -104,12 +138,9 @@ export async function callDecodeToken(token: string): Promise<DecodedJwtToken | 
 
 export async function callGetUserConnectionInfos(clientCode:string, userId:string): Promise<UserInfos | null> {
   try {
-          const resGetUserConnection = await fetch(`${API_BASE_URL}/${clientCode}/${userId}/connectioninfos`, {
+          const resGetUserConnection = await fetch(`${API_BASE_URL}/${clientCode}/${userId}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId : userId,
-            }),
+            headers: { 'Content-Type': 'application/json' }
           });
           if (!resGetUserConnection.ok) {
             return null;

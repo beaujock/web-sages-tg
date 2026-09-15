@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { API_BASE_URL, callDecodeToken, callGetUserConnectionInfos, getCookie, setClientCookie } from '@/lib/auth';
+import { API_BASE_URL, callDecodeToken, callGetUserConnectionInfos, getCookie, setClientCookie, verifyUser } from '@/lib/auth';
 
 // Helper function to retrieve a cookie by its name
 /*
@@ -38,11 +38,15 @@ export default function LoginPage() {
         }
 
         if (token && clientCode) {
-          const decoded = await callDecodeToken(token);
+          /*const decoded = await callDecodeToken(token);
           if (!decoded || decoded === null) {
             throw new Error("Veuillez vous reconnecter.");
+          }*/
+         const verifiedUser = await verifyUser(token)
+          if (!verifiedUser || verifiedUser === null) {
+            throw new Error("Veuillez vous reconnecter.");
           }
-          const userInfos = await callGetUserConnectionInfos(clientCode, decoded.user_id);
+          const userInfos = await callGetUserConnectionInfos(clientCode, verifiedUser.userId);
           if (!userInfos || userInfos === null) {
             throw new Error("Impossible de récupérer vos informations Veuillez vous reconnecter.");
           }
@@ -113,9 +117,9 @@ export default function LoginPage() {
       // Save initial connection context in sessionStorage
       sessionStorage.setItem('token', connectionToken);
       sessionStorage.setItem('cookie_name', cookie_name);
-      sessionStorage.setItem('menuItems', JSON.stringify(menuItems));
-      sessionStorage.setItem('user_full_name', user_full_name);
-      sessionStorage.setItem('user_id', userId);
+      //sessionStorage.setItem('menuItems', JSON.stringify(menuItems));
+      //sessionStorage.setItem('user_full_name', user_full_name);
+      //sessionStorage.setItem('user_id', userId);
 
       //sessionStorage.setItem('userRoles', JSON.stringify(userRoles));
       //console.log("Menu Items stored in sessionStorage: ", menuItems);

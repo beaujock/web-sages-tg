@@ -50,17 +50,17 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
     const fetchConnectionInfos = async () => {
       try {
         // Retrieve userId from session storage
-        const userId = sessionStorage.getItem('user_id');
-        const storedName = sessionStorage.getItem('user_full_name') || '<Utilisateur>';
+        //const userId = sessionStorage.getItem('user_id');
+        //const storedName = sessionStorage.getItem('user_full_name') || '<Utilisateur>';
         const connectionToken = sessionStorage.getItem('token');
-        setUserFullName(storedName);
+        //setUserFullName(storedName);
 
         if (!connectionToken) {
           console.warn("No token found in session storage.");
           setLoading(false);
           return;
         }
-        const response = await fetch(`${API_BASE_URL}/${clientCode}/${roleCode}/$/connectioninfos`, {
+        const response = await fetch(`${API_BASE_URL}/${clientCode}/${roleCode}/menu`, {
             method: 'GET',
             headers: {
             'Content-Type': 'application/json',
@@ -76,13 +76,13 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
         console.log("Connection infos data", data);
         
         // Adjust these property accesses depending on your exact API response structure
-        if (data.userRoleInfos.menu_items) {
-            setMenuItems(data.userRoleInfos.menu_items.filter((item: SagesMenuItem) => item.active));
+        if (data.menuItems) {
+            setMenuItems(data.menuItems.filter((item: SagesMenuItem) => item.active));
         }
 
         // Optional: Update full name if the API returns it
-        if (data.userRoleInfos.full_name) {
-            setUserFullName(data.userRoleInfos.full_name);
+        if (data.userFullName) {
+            setUserFullName(data.userFullName);
         }
 
       } catch (error) {
