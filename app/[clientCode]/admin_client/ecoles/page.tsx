@@ -3,34 +3,54 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-// 1. Added Download to lucide-react imports
-import { Loader2, School, Eye, Edit, Plus, BookOpen, GraduationCap, Users, Download } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import * as LucideIcons from 'lucide-react';
 import { API_BASE_URL } from '@/lib/auth';
 
+// Destructure the static icons needed for the base layout
+const { Loader2, School, Plus, Download, Link: LinkIcon } = LucideIcons;
+
 type AdminClientEcoleDisplay = {
-    id                      : string,
-    full_name               : string,
-    short_name              : string|null,
-    establishment_date      : Date|null;
-    code                    : string,
-    primary_contact_name    : string|null,
-    secondary_contact_name  : string|null,
-    contact_infos           : string|null,
-    phone_number            : string|null,
-    email                   : string|null,
-    website                 : string|null,
-    notes                   : string|null,
-    create_date             : Date,
-    created_by              : string,
-    change_date             : Date|null,
-    changed_by              : string|null
+    id: string;
+    full_name: string;
+    short_name: string | null;
+    establishment_date: Date | null;
+    code: string;
+    primary_contact_name: string | null;
+    secondary_contact_name: string | null;
+    contact_infos: string | null;
+    phone_number: string | null;
+    email: string | null;
+    website: string | null;
+    notes: string | null;
+    create_date: Date;
+    created_by: string;
+    change_date: Date | null;
+    changed_by: string | null;
 };
 
 type AdminClientEcoleOverview = {
-    ecole               : AdminClientEcoleDisplay;
-    numberSalleClasses  : number;
-    numberEnseignants   : number;
-    numberEleves        : number;
+    ecole: AdminClientEcoleDisplay;
+    numberSalleClasses: number;
+    numberEnseignants: number;
+    numberEleves: number;
+};
+
+// Types for the new dynamic API endpoints
+type DynamicAction = {
+    id: string;
+    display_name: string;
+    icon_name : string;
+    end_route : string;
+    description : string|null;
+};
+
+type DynamicSchoolLink = {
+    id: string;
+    display_name: string;
+    icon_name : string;
+    end_route : string;
+    description : string|null;
 };
 
 export default function EcolesPage({
@@ -39,37 +59,75 @@ export default function EcolesPage({
   params: Promise<{ clientCode: string }>;
 }) {
   const { clientCode } = use(params);
+  const router = useRouter();
   
   const [ecolesOverviews, setEcolesOverviews] = useState<AdminClientEcoleOverview[]>([]);
+  const [pageActions, setPageActions] = useState<DynamicAction[]>([]);
+  const [schoolLinks, setSchoolLinks] = useState<DynamicSchoolLink[]>([]);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // 2. Added state to handle the PDF download loading UI
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    const fetchEcoles = async () => {
+    const fetchAllData = async () => {
       try {
         const token = sessionStorage.getItem('token');
 
         if (!token) {
-          throw new Error("Aucun jeton d'authentification trouvé. Veuillez vous reconnecter.");
+          router.push('/login');
+          return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        // Fetch schools, page actions, and school links concurrently with Bearer token for each
+        const [ecolesRes, actionsRes, linksRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles`, { 
+              method: 'GET', 
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              } 
+            }),
+            fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/actions`, { 
+              method: 'GET', 
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              } 
+            }),
+            fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/links`, { 
+              method: 'GET', 
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              } 
+            })
+        ]);
 
-        if (!res.ok) {
-          throw new Error('Erreur lors de la récupération de la liste des écoles');
+        console.log("actions", actionsRes);
+        console.log("links", linksRes);
+
+        // Redirect to login if token is expired/invalid (401 Unauthorized)
+        if (ecolesRes.status === 401 || actionsRes.status === 401 || linksRes.status === 401) {
+            sessionStorage.removeItem('token');
+            router.push('/login');
+            return;
         }
 
-        const jsonData = await res.json();
-        setEcolesOverviews(Array.isArray(jsonData) ? jsonData : jsonData.clientEcolesOverviews || []);
+        if (!ecolesRes.ok) throw new Error('Erreur lors de la récupération de la liste des écoles');
+        
+        const ecolesData = await ecolesRes.json();
+        const actionsData = actionsRes.ok ? await actionsRes.json() : [];
+        const linksData = linksRes.ok ? await linksRes.json() : [];
+
+        setEcolesOverviews(Array.isArray(ecolesData) ? ecolesData : ecolesData.clientEcolesOverviews || []);
+        setPageActions(Array.isArray(actionsData) ? actionsData : actionsData.actions || []);
+        setSchoolLinks(Array.isArray(linksData) ? linksData : linksData.links || []);
+
+        console.log("ecoles data", ecolesData.clientEcolesOverviews);
+        console.log("actions data", actionsData.actions);
+        console.log("links data", linksData.links);
+
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Une erreur est survenue');
@@ -78,16 +136,19 @@ export default function EcolesPage({
       }
     };
 
-    fetchEcoles();
-  }, [clientCode]);
+    fetchAllData();
+  }, [clientCode, router]);
 
-  // 3. Added the PDF download handler function
   const handleDownloadPDF = async () => {
     try {
       setIsDownloading(true);
       const token = sessionStorage.getItem('token');
 
-      // Replace '/export/pdf' with your actual API endpoint that generates the PDF
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
       const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/exportpdf`, {
         method: 'GET',
         headers: {
@@ -95,21 +156,21 @@ export default function EcolesPage({
         },
       });
 
+      if (res.status === 401) {
+        sessionStorage.removeItem('token');
+        router.push('/login');
+        return;
+      }
+
       if (!res.ok) {
-        // Read the error message sent by the backend
         const errorText = await res.text();
-        console.error("Status de l'erreur:", res.status);
-        console.error("Message du serveur:", errorText);
         throw new Error(`Erreur ${res.status}: ${errorText}`);
       }
 
-      // Convert the response to a blob and trigger a browser download
       const blob = await res.blob();
-      console.log("Blob = ", blob);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      // Set a dynamic file name with the current date
       a.download = `ecoles_statistiques_${new Date().toISOString().split('T')[0]}.pdf`;
       document.body.appendChild(a);
       a.click();
@@ -146,12 +207,27 @@ export default function EcolesPage({
         <div>
           <h2 className="text-2xl font-bold text-charcoal-secondary">Liste des Écoles</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Gérez vos écoles et consultez leurs statistiques.
+            Gérez vos écoles.
           </p>
         </div>
         
-        {/* 4. Action buttons container */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap gap-3">
+          {/* Dynamic Page Actions */}
+          {pageActions.map((action) => {
+            const ActionIcon = LucideIcons[action.icon_name as keyof typeof LucideIcons] as React.ElementType;
+            
+            return (
+              <Link
+                key={action.id}
+                href={`/${clientCode}/admin_client/ecoles${action.end_route}`}
+                className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+              >
+                {ActionIcon && <ActionIcon className="w-5 h-5 shrink-0" />}
+                <span className="font-medium">{action.display_name}</span>
+              </Link>
+            );
+          })}
+
           {/* Download PDF Button */}
           <button
             onClick={handleDownloadPDF}
@@ -169,6 +245,7 @@ export default function EcolesPage({
           </button>
 
           {/* Create School Button */}
+          {/**
           <Link
             href={`/${clientCode}/admin_client/ecoles/new`}
             className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
@@ -176,6 +253,7 @@ export default function EcolesPage({
             <Plus className="w-5 h-5 shrink-0" />
             <span className="font-medium">Nouvelle école</span>
           </Link>
+           */}
         </div>
       </div>
 
@@ -186,7 +264,7 @@ export default function EcolesPage({
             Aucune école n&apos;est actuellement associée à ce client. Commencez par en ajouter une.
           </p>
           <Link
-            href={`/${clientCode}/admin_client/ecoles/new`}
+            href={`/${clientCode}/admin_client/ecoles/addecole`}
             className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
           >
             <Plus className="w-5 h-5 shrink-0" />
@@ -213,63 +291,28 @@ export default function EcolesPage({
                   </h3>
                 </div>
                 
-                {/* Action Links */}
+                {/* Dynamic Action Links per School */}
                 <div className="flex items-center flex-wrap gap-2 shrink-0">
-                  <Link
-                    href={`/${clientCode}/admin_client/ecoles/${ecole.id}/salleclasses`}
-                    className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
-                    title="Classes"
-                  >
-                    <BookOpen className="w-4 h-4 shrink-0" />
-                    <span className="hidden xl:inline text-sm font-medium">Classes</span>
-                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 ml-1 text-xs font-bold bg-teal-primary/10 text-teal-primary rounded-full group-hover:bg-white group-hover:text-teal-primary transition-colors">
-                      {overview.numberSalleClasses}
-                    </span>
-                  </Link>
-
-                  <Link
-                    href={`/${clientCode}/admin_client/ecoles/${ecole.id}/enseignants`}
-                    className="group flex items-center space-x-1.5 px-3 py-2 bg-coral-accent/5 border border-coral-accent/30 rounded-lg text-coral-accent hover:bg-coral-accent hover:text-white hover:border-coral-accent transition-colors"
-                    title="Enseignants"
-                  >
-                    <GraduationCap className="w-4 h-4 shrink-0" />
-                    <span className="hidden xl:inline text-sm font-medium">Enseignants</span>
-                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 ml-1 text-xs font-bold bg-coral-accent/10 text-coral-accent rounded-full group-hover:bg-white group-hover:text-coral-accent transition-colors">
-                      {overview.numberEnseignants}
-                    </span>
-                  </Link>
-
-                  <Link
-                    href={`/${clientCode}/admin_client/ecoles/${ecole.id}/eleves`}
-                    className="group flex items-center space-x-1.5 px-3 py-2 bg-charcoal-secondary/5 border border-charcoal-secondary/30 rounded-lg text-charcoal-secondary hover:bg-charcoal-secondary hover:text-white hover:border-charcoal-secondary transition-colors"
-                    title="Élèves"
-                  >
-                    <Users className="w-4 h-4 shrink-0" />
-                    <span className="hidden xl:inline text-sm font-medium">Élèves</span>
-                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1.5 ml-1 text-xs font-bold bg-charcoal-secondary/10 text-charcoal-secondary rounded-full group-hover:bg-white group-hover:text-charcoal-secondary transition-colors">
-                      {overview.numberEleves}
-                    </span>
-                  </Link>
-
-                  <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block"></div>
-
-                  <Link
-                    href={`/${clientCode}/admin_client/ecoles/${ecole.id}`}
-                    className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-teal-primary hover:border-teal-primary/50 transition-colors"
-                    title="Détails"
-                  >
-                    <Eye className="w-4 h-4 shrink-0" />
-                    <span className="hidden xl:inline text-sm font-medium">Détails</span>
-                  </Link>
-
-                  <Link
-                    href={`/${clientCode}/admin_client/ecoles/${ecole.id}/edit`}
-                    className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-charcoal-secondary hover:border-charcoal-secondary/50 transition-colors"
-                    title="Mettre à jour"
-                  >
-                    <Edit className="w-4 h-4 shrink-0" />
-                    <span className="hidden xl:inline text-sm font-medium">Mettre à jour</span>
-                  </Link>
+                  {schoolLinks.map((link) => {
+                    const LinkActionIcon = LucideIcons[link.icon_name as keyof typeof LucideIcons] as React.ElementType;
+                    
+                    return (
+                      <Link
+                        key={link.id}
+                        // Used ecole.id here instead of link.id so the route resolves to the school
+                        href={`/${clientCode}/admin_client/ecoles/${ecole.id}${link.end_route}`}
+                        className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
+                        title={link.description || ' '}
+                      >
+                        {LinkActionIcon ? (
+                          <LinkActionIcon className="w-4 h-4 shrink-0" />
+                        ) : (
+                          <LinkIcon className="w-4 h-4 shrink-0" />
+                        )}
+                        <span className="hidden xl:inline text-sm font-medium">{link.display_name}</span>
+                      </Link>
+                    )
+                  })}
                 </div>
               </div>
             );
