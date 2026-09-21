@@ -46,7 +46,7 @@ export default function CreateClassroomPage({
         const token = sessionStorage.getItem('token');
         if (!token) return;
 
-        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/classes`, {
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
