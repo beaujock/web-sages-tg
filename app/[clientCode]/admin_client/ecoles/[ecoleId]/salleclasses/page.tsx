@@ -3,17 +3,8 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { 
-  Loader2, 
-  BookOpen, 
-  Plus, 
-  CalendarDays, 
-  ClipboardCheck, 
-  GraduationCap, 
-  Eye, 
-  Edit,
-  Users 
-} from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
+import { Loader2, BookOpen, Plus } from 'lucide-react';
 import { API_BASE_URL } from '@/lib/auth';
 
 type ClassroomDisplay = {
@@ -33,6 +24,28 @@ type ClassroomDisplay = {
     changed_by               : string|null
 };
 
+type InfoMenuItemLinkActionDO = {
+    id           : string;
+    display_name : string;
+    icon_name    : string | null;
+    end_route    : string;
+    order        : number;
+    description  : string | null;
+};
+
+const renderIcon = (iconName?: string | null, className: string = "w-4 h-4 shrink-0") => {
+  if (!iconName) return <LucideIcons.Settings className={className} />;
+  
+  // Dynamically access the Lucide component based on the exact string returned from the API
+  const IconComponent = (LucideIcons as any)[iconName];
+  
+  if (!IconComponent) {
+    return <LucideIcons.MoreHorizontal className={className} />;
+  }
+  
+  return <IconComponent className={className} />;
+};
+
 export default function ClassesPage({
   params,
 }: {
@@ -41,48 +54,54 @@ export default function ClassesPage({
   const { clientCode, ecoleId } = use(params);
   
   const [classes, setClasses] = useState<ClassroomDisplay[]>([]);
-  // Added state to store the school name independently
+  const [pageActions, setPageActions] = useState<InfoMenuItemLinkActionDO[]>([]);
+  const [classLinks, setClassLinks] = useState<InfoMenuItemLinkActionDO[]>([]);
   const [schoolName, setSchoolName] = useState<string>("l'école");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchClasses = async () => {
+    const fetchData = async () => {
       try {
         const token = sessionStorage.getItem('token');
 
         if (!token) {
           throw new Error("Aucun jeton d'authentification trouvé. Veuillez vous reconnecter.");
         }
-        console.log("Client Code = ", clientCode);
-        console.log("Ecole ID = ", ecoleId);
 
-        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        };
 
-        const jsonData = await res.json();
-        console.log("json Data = ", jsonData);
+        const [resClasses, resActions, resLinks] = await Promise.all([
+          fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`, { method: 'GET', headers }),
+          fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/actions`, { method: 'GET', headers }),
+          fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/links`, { method: 'GET', headers })
+        ]);
+
+        const jsonData = await resClasses.json();
+        const actionsData = resActions.ok ? await resActions.json() : [];
+        const linksData = resLinks.ok ? await resLinks.json() : [];
         
-        if (res.status === 400 ) throw new Error(Array.isArray(jsonData) ? jsonData : jsonData.message || []);
-
-        if (!res.ok) {
+        if (resClasses.status === 400 || !resClasses.ok) {
           throw new Error(Array.isArray(jsonData) ? jsonData : jsonData.message || []);
         }
 
-        // 1. Set the classes array
         setClasses(Array.isArray(jsonData) ? jsonData : jsonData.salleClasses || []);
         
-        // 2. Extract and set the school name from the parent record
+        const parsedActions: InfoMenuItemLinkActionDO[] = Array.isArray(actionsData) ? actionsData : actionsData.actions || [];
+        setPageActions(parsedActions.sort((a, b) => a.order - b.order));
+        
+        const parsedLinks: InfoMenuItemLinkActionDO[] = Array.isArray(linksData) ? linksData : linksData.links || [];
+        setClassLinks(parsedLinks.sort((a, b) => a.order - b.order));
+
+        console.log("Actions : ", parsedActions);
+        console.log("Links : ", parsedLinks);
+        
         if (!Array.isArray(jsonData) && jsonData.ecole) {
-          // Adjust "short_name" or "full_name" based on your exact API property names
           setSchoolName(jsonData.ecole.short_name || jsonData.ecole.full_name || "l'école");
         } else if (Array.isArray(jsonData) && jsonData.length > 0) {
-          // Safe fallback just in case the API returns a flat array
           setSchoolName(jsonData[0].ecole_label || "l'école");
         }
 
@@ -94,8 +113,24 @@ export default function ClassesPage({
       }
     };
 
-    fetchClasses();
+    fetchData();
   }, [clientCode, ecoleId]);
+
+  const buildUrl = (template: string, classId?: string) => {
+    let url = template
+      .replace('[codeClient]', clientCode)
+      .replace('[ecoleId]', ecoleId);
+      
+    if (classId) {
+      url = url.replace('[classId]', classId).replace('[id]', classId);
+    }
+    
+    if (!url.startsWith('/')) {
+        url = `/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/${classId ? `${classId}/${url}` : url}`;
+    }
+    
+    return url;
+  };
 
   if (loading) {
     return (
@@ -119,7 +154,6 @@ export default function ClassesPage({
       {/* ================= HEADER ================= */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          {/* Header now strictly uses the state variable */}
           <h2 className="text-2xl font-bold text-charcoal-secondary">
             Classes ({schoolName})
           </h2>
@@ -128,13 +162,30 @@ export default function ClassesPage({
           </p>
         </div>
         
-        <Link
-          href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/new`}
-          className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
-        >
-          <Plus className="w-5 h-5 shrink-0" />
-          <span className="font-medium">Nouvelle classe</span>
-        </Link>
+        <div className="flex gap-2 shrink-0">
+          {pageActions.length > 0 ? (
+            pageActions.map(action => (
+              <Link
+                key={action.id}
+                
+                href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses${action.end_route}`}
+                title={action.description || action.display_name}
+                className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
+              >
+                {renderIcon(action.icon_name, "w-5 h-5 shrink-0")}
+                <span className="font-medium">{action.display_name}</span>
+              </Link>
+            ))
+          ) : (
+            <Link
+              href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/addsalleclasse`}
+              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
+            >
+              <Plus className="w-5 h-5 shrink-0" />
+              <span className="font-medium">Nouvelle classe</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* ================= EMPTY STATE ================= */}
@@ -144,13 +195,16 @@ export default function ClassesPage({
           <p className="text-gray-500 mb-6 text-center max-w-sm">
             Aucune classe n&apos;est actuellement associée à cette école. Commencez par en ajouter une.
           </p>
-          <Link
-            href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/new`}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
-          >
-            <Plus className="w-5 h-5 shrink-0" />
-            <span className="font-medium">Créer une classe</span>
-          </Link>
+          {pageActions.length > 0 && (
+             <Link
+             href={buildUrl(pageActions[0].end_route)}
+             title={pageActions[0].description || pageActions[0].display_name}
+             className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
+           >
+             {renderIcon(pageActions[0].icon_name, "w-5 h-5 shrink-0")}
+             <span className="font-medium">{pageActions[0].display_name}</span>
+           </Link>
+          )}
         </div>
       ) : (
         /* ================= CLASSES LIST ================= */
@@ -172,64 +226,24 @@ export default function ClassesPage({
                 </div>
               </div>
               
-              {/* Action Links */}
+              {/* Dynamic Action Links */}
               <div className="flex items-center flex-wrap gap-2 shrink-0">
-                
-                <Link
-                  href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/eleves`}
-                  className="flex items-center space-x-1.5 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-indigo-600 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-colors"
-                  title="Élèves"
-                >
-                  <Users className="w-4 h-4 shrink-0" />
-                  <span className="hidden md:inline text-sm font-medium">Élèves</span>
-                </Link>
-
-                <Link
-                  href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/emploi-du-temps`}
-                  className="flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
-                  title="Emploi du temps"
-                >
-                  <CalendarDays className="w-4 h-4 shrink-0" />
-                  <span className="hidden md:inline text-sm font-medium">Emploi du temps</span>
-                </Link>
-
-                <Link
-                  href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/evaluations`}
-                  className="flex items-center space-x-1.5 px-3 py-2 bg-coral-accent/5 border border-coral-accent/30 rounded-lg text-coral-accent hover:bg-coral-accent hover:text-white hover:border-coral-accent transition-colors"
-                  title="Évaluations"
-                >
-                  <ClipboardCheck className="w-4 h-4 shrink-0" />
-                  <span className="hidden md:inline text-sm font-medium">Évaluations</span>
-                </Link>
-
-                <Link
-                  href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/enseignants`}
-                  className="flex items-center space-x-1.5 px-3 py-2 bg-charcoal-secondary/5 border border-charcoal-secondary/30 rounded-lg text-charcoal-secondary hover:bg-charcoal-secondary hover:text-white hover:border-charcoal-secondary transition-colors"
-                  title="Enseignants"
-                >
-                  <GraduationCap className="w-4 h-4 shrink-0" />
-                  <span className="hidden md:inline text-sm font-medium">Enseignants</span>
-                </Link>
-
-                <div className="w-px h-6 bg-gray-200 mx-1 hidden sm:block"></div>
-
-                <Link
-                  href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}`}
-                  className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-teal-primary hover:border-teal-primary/50 transition-colors"
-                  title="Détails"
-                >
-                  <Eye className="w-4 h-4 shrink-0" />
-                  <span className="hidden xl:inline text-sm font-medium">Détails</span>
-                </Link>
-
-                <Link
-                  href={`/${clientCode}/admin_client/ecoles/${ecoleId}/classes/${cls.id}/edit`}
-                  className="flex items-center space-x-1.5 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-500 hover:text-charcoal-secondary hover:border-charcoal-secondary/50 transition-colors"
-                  title="Mettre à jour"
-                >
-                  <Edit className="w-4 h-4 shrink-0" />
-                  <span className="hidden xl:inline text-sm font-medium">Mettre à jour</span>
-                </Link>
+                {classLinks.length > 0 ? (
+                  classLinks.map((link) => (
+                    <Link
+                      key={link.id}
+                      href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/${cls.id}${link.end_route}`}
+                      title={link.description || link.display_name}
+                      className="flex items-center space-x-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                    >
+                      {renderIcon(link.icon_name)}
+                      <span className="hidden md:inline text-sm font-medium">{link.display_name}</span>
+                    </Link>
+                  ))
+                ) : (
+                  //<span className="text-sm text-gray-400 italic">Aucun lien disponible</span>
+                  <></>
+                )}
               </div>
             </div>
           ))}

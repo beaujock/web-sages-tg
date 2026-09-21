@@ -4,16 +4,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, Activity, Bell, Search,
-  GraduationCap, Users, BookUser, UserCheck, Contact,
-  School, Library, BookOpen, Backpack,
-  CalendarDays, Clock, ClipboardList, DoorOpen,
-  FileText, FileCheck2, Award, BarChart3,
-  Receipt, Coins, Calculator,
-  Settings, ShieldCheck, Database, HelpCircle,
-  LayoutTemplate, LogOut
-} from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import { API_BASE_URL } from '@/lib/auth';
 
 type SagesMenuItem = {
@@ -21,22 +12,6 @@ type SagesMenuItem = {
   icon_name: string | null;
   end_route: string;
   active: boolean;
-};
-
-const iconMap: Record<string, React.ElementType> = {
-  'layout-dashboard': LayoutDashboard,
-  'users': Users,
-  'graduation-cap': GraduationCap,
-  'school': School,
-  'calendar-days': CalendarDays,
-  'file-text': FileText,
-  'receipt': Receipt,
-  'settings': Settings,
-  'shield-check': ShieldCheck,
-  'book-open': BookOpen,
-  'door-open': DoorOpen,
-  'activity': Activity,
-  'bell': Bell,
 };
 
 export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, clientCode: string }) {
@@ -49,17 +24,14 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
   useEffect(() => {
     const fetchConnectionInfos = async () => {
       try {
-        // Retrieve userId from session storage
-        //const userId = sessionStorage.getItem('user_id');
-        //const storedName = sessionStorage.getItem('user_full_name') || '<Utilisateur>';
         const connectionToken = sessionStorage.getItem('token');
-        //setUserFullName(storedName);
 
         if (!connectionToken) {
           console.warn("No token found in session storage.");
           setLoading(false);
           return;
         }
+        
         const response = await fetch(`${API_BASE_URL}/${clientCode}/${roleCode}/menu`, {
             method: 'GET',
             headers: {
@@ -75,12 +47,11 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
         const data = await response.json();
         console.log("Connection infos data", data);
         
-        // Adjust these property accesses depending on your exact API response structure
         if (data.menuItems) {
+          console.log("MenuItems : ", data.menuItems);
             setMenuItems(data.menuItems.filter((item: SagesMenuItem) => item.active));
         }
 
-        // Optional: Update full name if the API returns it
         if (data.userFullName) {
             setUserFullName(data.userFullName);
         }
@@ -125,7 +96,7 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
         
         <div className="hidden md:flex flex-col px-2 md:px-4 py-2 mb-2 border-b border-gray-700/50 pb-4">
           <div className="flex items-center space-x-2">
-            <UserCheck className="w-4 h-4 text-teal-primary" />
+            <LucideIcons.UserCheck className="w-4 h-4 text-teal-primary" />
             <span className="font-semibold text-sm truncate text-white">{userFullName}</span>
           </div>
         </div>
@@ -140,14 +111,14 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
           }`}
           title="Tableau de bord"
         >
-          <LayoutDashboard className="w-5 h-5 shrink-0" strokeWidth={isDashboardActive ? 2 : 1.5} />
+          <LucideIcons.LayoutDashboard className="w-5 h-5 shrink-0" strokeWidth={isDashboardActive ? 2 : 1.5} />
           <span className="hidden md:block font-medium text-sm truncate">Tableau de bord</span>
         </Link>
 
         {menuItems.length > 0 ? menuItems.map((item, index) => {
-          const IconComponent = (item.icon_name && iconMap[item.icon_name.toLowerCase()]) 
-            ? iconMap[item.icon_name.toLowerCase()] 
-            : LayoutTemplate;
+          // Dynamically resolves the exact component name (e.g., "NotebookPen") from the Lucide module
+          const IconComponent = (item.icon_name && LucideIcons[item.icon_name as keyof typeof LucideIcons] as React.ElementType) 
+            || LucideIcons.LayoutTemplate;
           
           const href = `/${clientCode}/${roleCode}${item.end_route}`;
           const isActive = pathname === href;
@@ -183,7 +154,7 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
           }`}
           title="Paramétrages"
         >
-          <Settings className="w-5 h-5 shrink-0" strokeWidth={isSettingsActive ? 2 : 1.5} />
+          <LucideIcons.Settings className="w-5 h-5 shrink-0" strokeWidth={isSettingsActive ? 2 : 1.5} />
           <span className="hidden md:block font-medium text-sm truncate">Paramétrages</span>
         </Link>
 
@@ -192,7 +163,7 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
           className="flex items-center justify-center md:justify-start md:space-x-3 w-full px-2 md:px-4 py-2.5 rounded-md text-gray-300 hover:bg-[#FF6B6B] hover:text-white transition-all duration-200"
           title="Se déconnecter"
         >
-          <LogOut className="w-5 h-5 shrink-0" strokeWidth={1.5} />
+          <LucideIcons.LogOut className="w-5 h-5 shrink-0" strokeWidth={1.5} />
           <span className="hidden md:block font-medium text-sm truncate">Se déconnecter</span>
         </button>
       </div>

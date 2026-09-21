@@ -108,7 +108,7 @@ export default function EcolesPage({
         console.log("links", linksRes);
 
         // Redirect to login if token is expired/invalid (401 Unauthorized)
-        if (ecolesRes.status === 401 || actionsRes.status === 401 || linksRes.status === 401) {
+        if (ecolesRes.status === 400 || actionsRes.status === 400 || linksRes.status === 400) {
             sessionStorage.removeItem('token');
             router.push('/login');
             return;
