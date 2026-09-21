@@ -29,7 +29,7 @@ export async function proxy(request: NextRequest) {
   console.log("Is login page : ", isLoginPage);
 
   // 4. Retrieve the cookie name from environment variables
-  const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME;
+  const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME || 'BEAUJOCK_SAGES_TG' ;
   console.log("cookie name : ", cookieName);
   
   if (!cookieName) {
