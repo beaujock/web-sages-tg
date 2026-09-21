@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import * as LucideIcons from 'lucide-react';
-import { API_BASE_URL } from '@/lib/auth';
+import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type SagesMenuItem = {
   display_name: string;
@@ -24,7 +24,9 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
   useEffect(() => {
     const fetchConnectionInfos = async () => {
       try {
-        const connectionToken = sessionStorage.getItem('token');
+        //const connectionToken = sessionStorage.getItem('token');
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const connectionToken = getCookie(cookieName);
 
         if (!connectionToken) {
           console.warn("No token found in session storage.");

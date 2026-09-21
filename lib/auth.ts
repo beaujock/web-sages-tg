@@ -28,6 +28,8 @@ type UserInfos = {
 
 export interface DecodedJwtToken {
     user_id            : string;
+    user_full_name     : string;
+    roles              : string[];
     effective_date     : Date;
     expiry_date        : Date;
     user_ip_address    : string | null;

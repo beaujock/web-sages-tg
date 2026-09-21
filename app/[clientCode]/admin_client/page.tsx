@@ -5,7 +5,6 @@ import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { School, Layers, Users, ArrowRight, Loader2 } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
 
 type DashboardData = {
   clientEcoles: any[] | number;
@@ -18,8 +17,6 @@ export default function AdminClientDashboard({
 }: {
   params: Promise<{ clientCode: string }>;
 }) {
-  const router = useRouter();
-
   const { clientCode } = use(params);
   
   const [data, setData] = useState<DashboardData | null>(null);
@@ -29,32 +26,24 @@ export default function AdminClientDashboard({
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        let token = sessionStorage.getItem('token') || sessionStorage.getItem('tempToken') || null;
-        const cookieName = sessionStorage.getItem('cookie_name');
-        if (!token && cookieName) {
-          token = getCookie(cookieName) || null;
-        }
-        if (!token) {
-          router.push(`/${clientCode}/login`);
-        }
-        else
-        {
-            // 2. Attach it as a Bearer token in the headers
-            const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client`, {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-              },
-            });
+        // The proxy guarantees we have a token. We only need to retrieve it for the fetch headers.
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const token = getCookie(cookieName);
 
-            if (!res.ok) {
-              throw new Error('Erreur lors de la récupération des données du tableau de bord');
-            }
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
 
-            const jsonData = await res.json();
-            setData(jsonData);
+        if (!res.ok) {
+          throw new Error('Erreur lors de la récupération des données du tableau de bord');
         }
+
+        const jsonData = await res.json();
+        setData(jsonData);
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Une erreur est survenue');
@@ -64,12 +53,12 @@ export default function AdminClientDashboard({
     };
 
     fetchDashboardData();
-  }, [clientCode, router]);
+  }, [clientCode]);
 
   // Handle Loading State
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-100">
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
         <Loader2 className="w-8 h-8 text-teal-600 animate-spin mb-4" />
         <p className="text-gray-500">Chargement de votre tableau de bord...</p>
       </div>
