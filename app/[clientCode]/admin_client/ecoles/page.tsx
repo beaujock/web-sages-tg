@@ -5,7 +5,7 @@ import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import * as LucideIcons from 'lucide-react';
-import { API_BASE_URL } from '@/lib/auth';
+import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 // Destructure the static icons needed for the base layout
 const { Loader2, School, Plus, Download, Link: LinkIcon } = LucideIcons;
@@ -72,7 +72,9 @@ export default function EcolesPage({
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const token = sessionStorage.getItem('token');
+        //const token = sessionStorage.getItem('token');
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const token = getCookie(cookieName);
 
         if (!token) {
           router.push('/login');

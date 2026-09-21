@@ -5,7 +5,7 @@ import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
 import { Loader2, BookOpen, Plus } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/auth';
+import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type ClassroomDisplay = {
     id                       : string,
@@ -63,7 +63,9 @@ export default function ClassesPage({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = sessionStorage.getItem('token');
+        //const token = sessionStorage.getItem('token');
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const token = getCookie(cookieName);
 
         if (!token) {
           throw new Error("Aucun jeton d'authentification trouvé. Veuillez vous reconnecter.");
