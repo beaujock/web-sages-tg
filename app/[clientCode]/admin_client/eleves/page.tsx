@@ -239,14 +239,14 @@ export default function ElevesPage({
         <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
           <GraduationCap className="w-12 h-12 text-gray-400 mb-3" />
           <p className="text-gray-500 mb-6 text-center max-w-sm">
-            Aucun élève n&apos;est actuellement inscrit pour ce client. Commencez par en ajouter un.
+            Aucun élève n&apos;est actuellement dans la base de données du client. Commencez par en ajouter un.
           </p>
           <Link
             href={`/${clientCode}/admin_client/eleves/addeleve`}
             className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm" //[cite: 2]
           >
             <Plus className="w-5 h-5 shrink-0" />
-            <span className="font-medium">Inscrire un élève</span>
+            <span className="font-medium">Ajouter un élève</span>
           </Link>
         </div>
       ) : (
