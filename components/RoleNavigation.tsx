@@ -69,8 +69,7 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
   }, [clientCode, roleCode]);
 
   const handleLogout = () => {
-    const cookieName = sessionStorage.getItem('cookie_name');
-    sessionStorage.clear();
+    const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
     if (cookieName) {
       document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
     }
@@ -162,7 +161,7 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
 
         <button 
           onClick={handleLogout}
-          className="flex items-center justify-center md:justify-start md:space-x-3 w-full px-2 md:px-4 py-2.5 rounded-md text-gray-300 hover:bg-[#FF6B6B] hover:text-white transition-all duration-200"
+          className="flex items-center justify-center md:justify-start md:space-x-3 w-full px-2 md:px-4 py-2.5 rounded-md text-gray-300 hover:bg-coral-accent hover:text-white transition-all duration-200"
           title="Se déconnecter"
         >
           <LucideIcons.LogOut className="w-5 h-5 shrink-0" strokeWidth={1.5} />
