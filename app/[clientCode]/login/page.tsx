@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { API_BASE_URL, getCookie, setClientCookie } from '@/lib/auth';
 
-export default function LoginPage() {
+export default function LoginPage() { // page.tsx
   const router = useRouter();
   const params = useParams();
   const clientCode = params?.clientCode as string;
@@ -14,6 +14,66 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // New state to manage the initial token check
+  const [isCheckingToken, setIsCheckingToken] = useState(true);
+
+  useEffect(() => {
+    const verifyExistingSession = async () => {
+      const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+      const token = getCookie(cookieName);
+
+      if (!token) {
+        setIsCheckingToken(false);
+        return;
+      }
+
+      try {
+        // Attempt to validate the token against your backend
+        // Adjust the endpoint ("/validate") to match your actual API structure
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/validateuser`, {
+          method: 'GET',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+          },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          
+          // Route based on validation response, mimicking your login logic
+          if (data.first_login) {
+            router.push(`/${clientCode}/changepassword`);
+            return;
+          }
+
+          if (data.roles && data.roles.length > 1) {
+            router.push(`/${clientCode}/selectrole`);
+          } else if (data.roles && data.roles.length === 1) {
+            const roleRoute = data.roles[0].toLowerCase();
+            router.push(`/${clientCode}/${roleRoute}`);
+          } else {
+            // Fallback if roles aren't provided by validation endpoint
+            router.push(`/${clientCode}`);
+          }
+        } else {
+          // Token is invalid/expired; clear it and show the login form
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          setIsCheckingToken(false);
+        }
+      } catch (err) {
+        console.error("Erreur de validation du token:", err);
+        setIsCheckingToken(false);
+      }
+    };
+
+    if (clientCode) {
+      verifyExistingSession();
+    } else {
+      setIsCheckingToken(false);
+    }
+  }, [clientCode, router]);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -98,6 +158,15 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  // Render a loading state while checking for an existing token
+  if (isCheckingToken) {
+    return (
+      <div className="max-w-md mx-auto my-12 p-6 flex justify-center items-center min-h-[300px]">
+        <div className="text-gray-600 text-sm font-medium">Vérification de la session...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-lg shadow-md border border-gray-200">
