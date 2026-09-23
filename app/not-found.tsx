@@ -11,5 +11,5 @@ export const viewport: Viewport = {
 };
 
 export default function NotFound() {
-  return <h1>404 - Page Not Found</h1>;
+  return <h1>404 - Page inconnue de notre application</h1>;
 }

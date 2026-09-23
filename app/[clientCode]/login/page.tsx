@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { API_BASE_URL, setClientCookie } from '@/lib/auth';
+import { API_BASE_URL, getCookie, setClientCookie } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,6 +32,10 @@ export default function LoginPage() {
       });
       
       if (!res.ok) {
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string; 
+        const token = getCookie(cookieName); 
+        if (!token && cookieName)
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`; 
         throw new Error("Echec authentification.\nVérifiez vos informations d'identification.");
       }
       
@@ -39,6 +43,10 @@ export default function LoginPage() {
       
       const connectionToken = data.connectionToken;
       if (!connectionToken) {
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string; 
+        const token = getCookie(cookieName); 
+        if (!token && cookieName)
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         throw new Error("Echec authentification.\nVérifiez vos informations d'identification.");
       }
       
@@ -74,9 +82,12 @@ export default function LoginPage() {
         });
 
         if (!responseAddUserSession.ok) {
+          const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string; 
+          const token = getCookie(cookieName); 
+          if (!token && cookieName)
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
           throw new Error("Echec authentification. Réessayez ou contactez votre administrateur.");
         }
-
         router.push(`/${clientCode}/${roleRoute}`);
       } else {
         setError('Aucun rôle associé avec ce compte. Reconnectez-vous ou contactez votre administrateur.');

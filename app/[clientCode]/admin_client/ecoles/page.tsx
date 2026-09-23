@@ -10,7 +10,7 @@ import { API_BASE_URL, getCookie } from '@/lib/auth';
 // Destructure the static icons needed for the base layout
 const { Loader2, School, Plus, Download, Link: LinkIcon } = LucideIcons;
 
-type AdminClientEcoleDisplay = {
+type DisplayEcoleDO = {
     id: string;
     full_name: string;
     short_name: string | null;
@@ -28,14 +28,14 @@ type AdminClientEcoleDisplay = {
     change_date: Date | null;
     changed_by: string | null;
 };
-
+/*
 type AdminClientEcoleOverview = {
     ecole: AdminClientEcoleDisplay;
     numberSalleClasses: number;
     numberEnseignants: number;
     numberEleves: number;
 };
-
+*/
 // Types for the new dynamic API endpoints
 type DynamicAction = {
     id: string;
@@ -61,7 +61,7 @@ export default function EcolesPage({
   const { clientCode } = use(params);
   const router = useRouter();
   
-  const [ecolesOverviews, setEcolesOverviews] = useState<AdminClientEcoleOverview[]>([]);
+  const [ecoles, setEcoles] = useState<DisplayEcoleDO[]>([]);
   const [pageActions, setPageActions] = useState<DynamicAction[]>([]);
   const [schoolLinks, setSchoolLinks] = useState<DynamicSchoolLink[]>([]);
   
@@ -111,9 +111,12 @@ export default function EcolesPage({
 
         // Redirect to login if token is expired/invalid (401 Unauthorized)
         if (ecolesRes.status === 400 || actionsRes.status === 400 || linksRes.status === 400) {
-            sessionStorage.removeItem('token');
-            router.push('/login');
-            return;
+          const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string; 
+          const token = getCookie(cookieName); 
+          if (!token && cookieName)
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          router.push('/login');
+          return;
         }
 
         if (!ecolesRes.ok) throw new Error('Erreur lors de la récupération de la liste des écoles');
@@ -122,13 +125,9 @@ export default function EcolesPage({
         const actionsData = actionsRes.ok ? await actionsRes.json() : [];
         const linksData = linksRes.ok ? await linksRes.json() : [];
 
-        setEcolesOverviews(Array.isArray(ecolesData) ? ecolesData : ecolesData.clientEcolesOverviews || []);
+        setEcoles(Array.isArray(ecolesData) ? ecolesData : ecolesData.ecoles || []);
         setPageActions(Array.isArray(actionsData) ? actionsData : actionsData.actions || []);
         setSchoolLinks(Array.isArray(linksData) ? linksData : linksData.links || []);
-
-        console.log("ecoles data", ecolesData.clientEcolesOverviews);
-        console.log("actions data", actionsData.actions);
-        console.log("links data", linksData.links);
 
       } catch (err: any) {
         console.error(err);
@@ -144,9 +143,10 @@ export default function EcolesPage({
   const handleDownloadPDF = async () => {
     try {
       setIsDownloading(true);
-      const token = sessionStorage.getItem('token');
-
+      const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string; 
+      const token = getCookie(cookieName); 
       if (!token) {
+        if (cookieName) document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         router.push('/login');
         return;
       }
@@ -159,7 +159,8 @@ export default function EcolesPage({
       });
 
       if (res.status === 401) {
-        sessionStorage.removeItem('token');
+        //sessionStorage.removeItem('token');
+        if (cookieName) document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         router.push('/login');
         return;
       }
@@ -233,7 +234,7 @@ export default function EcolesPage({
           {/* Download PDF Button */}
           <button
             onClick={handleDownloadPDF}
-            disabled={isDownloading || ecolesOverviews.length === 0}
+            disabled={isDownloading || ecoles.length === 0}
             className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 hover:text-teal-primary hover:border-teal-primary/30 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isDownloading ? (
@@ -259,7 +260,7 @@ export default function EcolesPage({
         </div>
       </div>
 
-      {ecolesOverviews.length === 0 ? (
+      {ecoles.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
           <School className="w-12 h-12 text-gray-400 mb-3" />
           <p className="text-gray-500 mb-6 text-center max-w-sm">
@@ -275,8 +276,8 @@ export default function EcolesPage({
         </div>
       ) : (
         <div className="flex flex-col space-y-3">
-          {ecolesOverviews.map((overview) => {
-            const ecole = overview.ecole; 
+          {ecoles.map((ecole) => {
+            //const ecole = overview.ecole; 
             
             return (
               <div 
