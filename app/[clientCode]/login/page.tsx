@@ -55,6 +55,7 @@ export default function LoginPage() { // page.tsx
             router.push(`/${clientCode}/${roleRoute}`);
           } else {
             // Fallback if roles aren't provided by validation endpoint
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
             router.push(`/${clientCode}`);
           }
         } else {
