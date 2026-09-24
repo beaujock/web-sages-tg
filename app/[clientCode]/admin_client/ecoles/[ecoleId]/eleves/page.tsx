@@ -269,7 +269,7 @@ export default function ElevesPage({
                     eleveName={`${eleve.first_name} ${eleve.last_name}`} 
                   />
                   <h3 className="font-semibold text-charcoal-secondary truncate" title={`${eleve.first_name} ${eleve.last_name}`}>
-                    {eleve.first_name} {eleve.last_name} {eleve.matricule ? `(${eleve.matricule})` : ''}
+                     {eleve.last_name} {eleve.first_name}
                   </h3>
                 </div>
                 
