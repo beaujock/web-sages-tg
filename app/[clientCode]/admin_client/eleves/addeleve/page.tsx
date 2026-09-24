@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useState, use, ChangeEvent, FormEvent } from 'react';
+import React, { useState, useEffect, use, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
-const { Loader2, ArrowLeft, Save, UploadCloud, Image : ImageIcon } = LucideIcons;
+const { Loader2, ArrowLeft, Save, UploadCloud, Image: ImageIcon } = LucideIcons;
 
 export default function AddElevePage({
   params,
@@ -17,26 +17,49 @@ export default function AddElevePage({
   const { clientCode } = use(params);
   const router = useRouter();
 
-  // Form state updated to reflect AdminClientCreateEleveDO (without matricule)
   const [formData, setFormData] = useState({
     last_name: '',
     first_name: '',
     other_names: '',
     preferred_name: '',
     date_of_birth: '',
-    gender: 'M',
+    gender: '',
     phone_number: '',
     email: '',
     notes: '',
   });
 
-  // Photo state
+  const [genders, setGenders] = useState<{ code: string; label: string }[]>([]);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-
-  // Submission state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Fetch genders from API on mount
+  useEffect(() => {
+    const fetchGenders = async () => {
+      try {
+        const token = getCookie(process.env.NEXT_PUBLIC_COOKIE_NAME as string);
+        if (!token) return;
+
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/lookups/genders`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setGenders(data.genders);
+          if (data.genders.length > 0) {
+            setFormData((prev) => ({ ...prev, gender: data.genders[0].code || data.genders[0].code }));
+          }
+        }
+      } catch (err) {
+        console.error('Erreur lors du chargement des sexes:', err);
+      }
+    };
+
+    fetchGenders();
+  }, [clientCode]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -46,7 +69,7 @@ export default function AddElevePage({
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      if (file.size > 5 * 1024 * 1024) {
         setError('L\'image ne doit pas dépasser 5 Mo.');
         return;
       }
@@ -70,37 +93,18 @@ export default function AddElevePage({
         return;
       }
 
-      // Use FormData to handle both the JSON payload structure and the File upload
-      const submitData = new FormData();
-      
-      // Append text fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) {
-            submitData.append(key, value);
-        }
-      });
-      
-      // The backend should derive "created_by" from the authenticated token, 
-      // but if your API strictly requires it in the body, you can append it here:
-      // submitData.append('created_by', 'current_user_id');
-
-      // Append photo file
-      if (photo) {
-        submitData.append('photo', photo);
-      }
-
+      // Step 1: Create student record to generate the matricule
       const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/eleves/addeleve`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: submitData,
+        body: JSON.stringify(formData),
       });
 
       if (res.status === 401) {
-        if (cookieName) {
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        }
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         router.push(`/${clientCode}/login`);
         return;
       }
@@ -110,7 +114,34 @@ export default function AddElevePage({
         throw new Error(errorData?.message || 'Erreur lors de la création de l\'élève');
       }
 
-      // Redirect back to students list on success
+      
+
+      const responseData = await res.json();
+      console.log("Creation Eleve Data", responseData)
+      const eleveMatricule = responseData.eleve.matricule; 
+
+      // Step 2: Upload photo to NEON Storage with specific folder and filename formatting
+      if (photo && eleveMatricule) {
+        const photoData = new FormData();
+        photoData.append('file', photo);
+        photoData.append('folder', `${clientCode.toLowerCase()}`);
+        photoData.append('filename', `eleves/${eleveMatricule}.jpg`);
+        //console.log("Photo data : ", photoData);
+
+        // Adjust this endpoint to match your NEON storage upload route
+        const uploadRes = await fetch(`${API_BASE_URL}/${clientCode}/storage/uploadeleve`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: photoData,
+        });
+
+        if (!uploadRes.ok) {
+          console.warn('L\'élève a été créé, mais le téléchargement de la photo a échoué.');
+        }
+      }
+
       router.push(`/${clientCode}/admin_client/eleves`);
     } catch (err: any) {
       console.error(err);
@@ -144,7 +175,6 @@ export default function AddElevePage({
       <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div className="p-6 space-y-8">
           
-          {/* Photo Upload Section */}
           <div className="flex flex-col sm:flex-row gap-6 items-start">
             <div className="shrink-0 flex flex-col items-center gap-3">
               <div className="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center overflow-hidden relative group">
@@ -169,7 +199,6 @@ export default function AddElevePage({
               </span>
             </div>
 
-            {/* Core Identification */}
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-700">Nom <span className="text-red-500">*</span></label>
@@ -211,7 +240,6 @@ export default function AddElevePage({
 
           <hr className="border-gray-100" />
 
-          {/* Secondary Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-gray-700">Autres noms (Optionnel)</label>
@@ -242,11 +270,14 @@ export default function AddElevePage({
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary/50 focus:border-teal-primary bg-white transition-colors"
+                disabled={genders.length === 0}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-primary/50 focus:border-teal-primary bg-white transition-colors disabled:opacity-50"
               >
-                <option value="M">Masculin</option>
-                <option value="F">Féminin</option>
-                <option value="O">Autre</option>
+                {genders.map((g: any) => (
+                  <option key={g.id || g.code} value={g.id || g.code}>
+                    {g.label || g.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -288,7 +319,6 @@ export default function AddElevePage({
           </div>
         </div>
 
-        {/* Footer Actions */}
         <div className="bg-gray-50 px-6 py-4 flex items-center justify-end space-x-3 border-t border-gray-200">
           <Link
             href={`/${clientCode}/admin_client/eleves`}
