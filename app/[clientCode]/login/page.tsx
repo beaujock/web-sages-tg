@@ -73,6 +73,7 @@ export default function LoginPage() { // page.tsx
     };
 
     if (clientCode) {
+      console.log("Verifying existing session");
       verifyExistingSession();
     } else {
       setIsCheckingToken(false);
