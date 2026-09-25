@@ -33,6 +33,7 @@ export default function LoginPage() { // page.tsx
       try {
         // Attempt to validate the token against your backend
         // Adjust the endpoint ("/validate") to match your actual API structure
+        console.log("Validating user");
         const res = await fetch(`${API_BASE_URL}/${clientCode}/validateuser`, {
           method: 'GET',
           headers: { 
@@ -76,6 +77,7 @@ export default function LoginPage() { // page.tsx
       console.log("Verifying existing session");
       verifyExistingSession();
     } else {
+      console.log("No client Code found");
       setIsCheckingToken(false);
     }
   }, [clientCode, router]);
