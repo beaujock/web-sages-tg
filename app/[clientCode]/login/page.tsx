@@ -22,8 +22,9 @@ export default function LoginPage() { // page.tsx
   useEffect(() => {
     const verifyExistingSession = async () => {
       const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+      console.log("Cookie name : ", cookieName);
       const token = getCookie(cookieName);
-
+      console.log("token: ", token);
       if (!token) {
         setIsCheckingToken(false);
         return;
@@ -42,6 +43,7 @@ export default function LoginPage() { // page.tsx
 
         if (res.ok) {
           const data = await res.json();
+          console.log("Validated user", data);
           
           // Route based on validation response, mimicking your login logic
           if (data.first_login) {
