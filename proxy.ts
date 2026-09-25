@@ -52,6 +52,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // 7. Redirect to dashboard/select role if they have a token but try to view the login page
+  /*
   if (token && isLoginPage) {
     const decodedToken:DecodedJwtToken = await decodeToken(token);
     console.log("Decoded token : ", decodedToken);
@@ -66,7 +67,8 @@ export async function proxy(request: NextRequest) {
         const selectRoleUrl = new URL(`/${clientCode}/selectrole`);
         return NextResponse.redirect(selectRoleUrl);
     }
-}
+  }
+    */
 
   return NextResponse.next();
 }
