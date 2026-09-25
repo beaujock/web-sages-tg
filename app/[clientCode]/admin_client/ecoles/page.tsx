@@ -28,14 +28,7 @@ type DisplayEcoleDO = {
     change_date: Date | null;
     changed_by: string | null;
 };
-/*
-type AdminClientEcoleOverview = {
-    ecole: AdminClientEcoleDisplay;
-    numberSalleClasses: number;
-    numberEnseignants: number;
-    numberEleves: number;
-};
-*/
+
 // Types for the new dynamic API endpoints
 type DynamicAction = {
     id: string;
@@ -72,7 +65,6 @@ export default function EcolesPage({
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        //const token = sessionStorage.getItem('token');
         const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
         const token = getCookie(cookieName);
 
@@ -159,7 +151,6 @@ export default function EcolesPage({
       });
 
       if (res.status === 401) {
-        //sessionStorage.removeItem('token');
         if (cookieName) document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         router.push('/login');
         return;
@@ -246,17 +237,6 @@ export default function EcolesPage({
               {isDownloading ? 'Génération...' : 'Télécharger PDF'}
             </span>
           </button>
-
-          {/* Create School Button */}
-          {/**
-          <Link
-            href={`/${clientCode}/admin_client/ecoles/new`}
-            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
-          >
-            <Plus className="w-5 h-5 shrink-0" />
-            <span className="font-medium">Nouvelle école</span>
-          </Link>
-           */}
         </div>
       </div>
 
@@ -277,24 +257,45 @@ export default function EcolesPage({
       ) : (
         <div className="flex flex-col space-y-3">
           {ecoles.map((ecole) => {
-            //const ecole = overview.ecole; 
-            
             return (
               <div 
                 key={ecole.id} 
                 className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-white gap-4"
               >
-                {/* Ecole Info */}
-                <div className="flex items-center space-x-3 truncate">
-                  <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0">
-                    <School className="w-5 h-5" />
+                {/* Left Side: Ecole Info (Link) + Static Buttons */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 truncate">
+                  
+                  {/* Clickable School Name -> Overview Page */}
+                  <Link 
+                    href={`/${clientCode}/admin_client/ecoles/${ecole.id}`}
+                    className="flex items-center space-x-3 truncate group"
+                  >
+                    <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0 group-hover:bg-teal-primary/20 transition-colors">
+                      <School className="w-5 h-5" />
+                    </div>
+                    <h3 className="font-semibold text-charcoal-secondary group-hover:text-teal-primary transition-colors truncate" title={ecole.full_name}>
+                      {ecole.short_name || ecole.full_name || 'École sans nom'}
+                    </h3>
+                  </Link>
+
+                  {/* Static Detail and Update Buttons */}
+                  <div className="flex items-center gap-2 shrink-0 sm:ml-2">
+                    <Link
+                      href={`/${clientCode}/admin_client/ecoles/${ecole.id}/detail`}
+                      className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors shadow-sm"
+                    >
+                      Détails
+                    </Link>
+                    <Link
+                      href={`/${clientCode}/admin_client/ecoles/${ecole.id}/update`}
+                      className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors shadow-sm"
+                    >
+                      Modifier
+                    </Link>
                   </div>
-                  <h3 className="font-semibold text-charcoal-secondary truncate" title={ecole.full_name}>
-                    {ecole.short_name || ecole.full_name || 'École sans nom'}
-                  </h3>
                 </div>
                 
-                {/* Dynamic Action Links per School */}
+                {/* Right Side: Dynamic Action Links per School */}
                 <div className="flex items-center flex-wrap gap-2 shrink-0">
                   {schoolLinks.map((link) => {
                     const LinkActionIcon = LucideIcons[link.icon_name as keyof typeof LucideIcons] as React.ElementType;
@@ -302,7 +303,6 @@ export default function EcolesPage({
                     return (
                       <Link
                         key={link.id}
-                        // Used ecole.id here instead of link.id so the route resolves to the school
                         href={`/${clientCode}/admin_client/ecoles/${ecole.id}${link.end_route}`}
                         className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
                         title={link.description || ' '}
@@ -312,7 +312,7 @@ export default function EcolesPage({
                         ) : (
                           <LinkIcon className="w-4 h-4 shrink-0" />
                         )}
-                        <span className="hidden xl:inline text-sm font-medium">{link.display_name}</span>
+                        <span className="text-sm font-medium">{link.display_name}</span>
                       </Link>
                     )
                   })}
