@@ -72,7 +72,7 @@ export default function LoginPage() { // page.tsx
       }
     };
 
-    if (clientCode) {
+    if (clientCode || clientCode !== null) {
       console.log("Verifying existing session");
       verifyExistingSession();
     } else {
@@ -167,7 +167,7 @@ export default function LoginPage() { // page.tsx
   // Render a loading state while checking for an existing token
   if (isCheckingToken) {
     return (
-      <div className="max-w-md mx-auto my-12 p-6 flex justify-center items-center min-h-[300px]">
+      <div className="max-w-md mx-auto my-12 p-6 flex justify-center items-center min-h-75">
         <div className="text-gray-600 text-sm font-medium">Vérification de la session...</div>
       </div>
     );
