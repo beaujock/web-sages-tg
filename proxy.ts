@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { DecodedJwtToken, decodeToken } from './lib/auth';
-import { JWTPayload } from 'jose';
+//import { DecodedJwtToken, decodeToken } from './lib/auth';
+//import { JWTPayload } from 'jose';
 
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   console.log("Path name: ", pathname);
   
