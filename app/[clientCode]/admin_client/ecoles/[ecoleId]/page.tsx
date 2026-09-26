@@ -4,7 +4,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { Loader2, ArrowLeft, School, Edit } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/auth';
+import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type AdminClientEcoleDisplay = {
     id                      : string,
@@ -49,7 +49,8 @@ export default function EcoleDetailsPage({
   useEffect(() => {
     const fetchEcoleDetails = async () => {
       try {
-        const token = sessionStorage.getItem('token');
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const token = getCookie(cookieName);
 
         if (!token) {
           throw new Error("Aucun jeton d'authentification trouvé. Veuillez vous reconnecter.");
@@ -121,7 +122,7 @@ export default function EcoleDetailsPage({
         </div>
 
         <Link
-          href={`/${clientCode}/admin_client/ecoles/${ecole.id}/edit`}
+          href={`/${clientCode}/admin_client/ecoles/${ecole.id}/update`}
           className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors shadow-sm"
         >
           <Edit className="w-4 h-4 shrink-0" />

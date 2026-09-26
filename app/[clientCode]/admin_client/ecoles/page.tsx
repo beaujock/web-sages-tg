@@ -10,23 +10,10 @@ import { API_BASE_URL, getCookie } from '@/lib/auth';
 // Destructure the static icons needed for the base layout
 const { Loader2, School, Plus, Download, Link: LinkIcon } = LucideIcons;
 
-type DisplayEcoleDO = {
+type DisplayClientEcoleDO = {
     id: string;
-    full_name: string;
-    short_name: string | null;
-    establishment_date: Date | null;
-    code: string;
-    primary_contact_name: string | null;
-    secondary_contact_name: string | null;
-    contact_infos: string | null;
-    phone_number: string | null;
-    email: string | null;
-    website: string | null;
-    notes: string | null;
-    create_date: Date;
-    created_by: string;
-    change_date: Date | null;
-    changed_by: string | null;
+    client_label: string;
+    short_name: string;
 };
 
 // Types for the new dynamic API endpoints
@@ -54,7 +41,7 @@ export default function EcolesPage({
   const { clientCode } = use(params);
   const router = useRouter();
   
-  const [ecoles, setEcoles] = useState<DisplayEcoleDO[]>([]);
+  const [ecoles, setEcoles] = useState<DisplayClientEcoleDO[]>([]);
   const [pageActions, setPageActions] = useState<DynamicAction[]>([]);
   const [schoolLinks, setSchoolLinks] = useState<DynamicSchoolLink[]>([]);
   
@@ -199,10 +186,7 @@ export default function EcolesPage({
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-charcoal-secondary">Liste des Écoles</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Gérez vos écoles.
-          </p>
+          <h2 className="text-2xl font-bold text-charcoal-secondary">Liste de vos Écoles</h2>
         </div>
         
         <div className="flex items-center flex-wrap gap-3">
@@ -273,8 +257,8 @@ export default function EcolesPage({
                     <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0 group-hover:bg-teal-primary/20 transition-colors">
                       <School className="w-5 h-5" />
                     </div>
-                    <h3 className="font-semibold text-charcoal-secondary group-hover:text-teal-primary transition-colors truncate" title={ecole.full_name}>
-                      {ecole.short_name || ecole.full_name || 'École sans nom'}
+                    <h3 className="font-semibold text-charcoal-secondary group-hover:text-teal-primary transition-colors truncate" title={ecole.short_name}>
+                      {ecole.short_name || 'École sans nom'}
                     </h3>
                   </Link>
 

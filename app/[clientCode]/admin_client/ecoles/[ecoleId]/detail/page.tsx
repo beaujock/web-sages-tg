@@ -138,7 +138,7 @@ export default function EcoleDetailPage({
               {ecole.short_name || ecole.full_name}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Détails et informations de l&apos;établissement
+              Détails et informations de l&apos;établissement scolaire
             </p>
           </div>
         </div>
