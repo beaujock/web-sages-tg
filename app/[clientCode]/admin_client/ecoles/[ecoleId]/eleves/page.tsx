@@ -44,7 +44,7 @@ type DynamicEleveLink = {
 };
 
 // Sub-component to handle fetching and displaying the student's photo
-function EleveAvatar({ clientCode, matricule, eleveName }: { clientCode: string; matricule: string | null; eleveName: string }) {
+function EleveAvatar({ clientCode, ecoleId, matricule, eleveName }: { clientCode: string; ecoleId: string; matricule: string | null; eleveName: string }) {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -70,7 +70,7 @@ function EleveAvatar({ clientCode, matricule, eleveName }: { clientCode: string;
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({ matricule })
+          body: JSON.stringify({ matricule, ecoleId })
         });
 
         if (res.ok) {
@@ -86,7 +86,7 @@ function EleveAvatar({ clientCode, matricule, eleveName }: { clientCode: string;
     };
 
     fetchPhoto();
-  }, [clientCode, matricule]);
+  }, [clientCode, ecoleId, matricule]);
 
   if (loading || !photoUrl) {
     return (
@@ -264,7 +264,8 @@ export default function ElevesPage({
                 {/* Eleve Info with Avatar */}
                 <div className="flex items-center space-x-4 truncate">
                   <EleveAvatar 
-                    clientCode={clientCode} 
+                    clientCode={clientCode}
+                    ecoleId={ecoleId}
                     matricule={eleve.matricule} 
                     eleveName={`${eleve.first_name} ${eleve.last_name}`} 
                   />
