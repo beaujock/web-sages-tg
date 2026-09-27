@@ -29,7 +29,7 @@ const LIMITS: { key: keyof ClientSettingsDO; label: string }[] = [
   { key: 'max_schools', label: 'Écoles' },
   { key: 'max_admin_client_users', label: 'Administrateurs client' },
   { key: 'max_admin_ecole_users', label: 'Administrateurs école' },
-  { key: 'max_admin_classroom_users', label: 'Administrateurs salle de classe' },
+  { key: 'max_admin_classroom_users', label: 'Administrateurs de classe' },
   { key: 'max_teacher_users', label: 'Enseignants' },
   { key: 'max_parent_users', label: 'Parents' },
   { key: 'max_eleve_users', label: 'Élèves' },

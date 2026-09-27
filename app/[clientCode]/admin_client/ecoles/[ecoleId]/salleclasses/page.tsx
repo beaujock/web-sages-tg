@@ -4,7 +4,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
-import { Loader2, BookOpen, Plus } from 'lucide-react';
+import { Loader2, BookOpen, Plus, Info } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type ClassroomDisplay = {
@@ -221,10 +221,22 @@ export default function ClassesPage({
                 <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0">
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <div>
+                <div className="flex items-center gap-2 truncate">
                   <h3 className="font-semibold text-charcoal-secondary truncate" title={cls.code}>
-                    {cls.code || 'Classe sans nom'}
+                    <Link
+                      href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/${cls.id}/overview`}
+                      className="hover:text-teal-primary hover:underline"
+                    >
+                      {cls.code || 'Classe sans nom'}
+                    </Link>
                   </h3>
+                  <Link
+                    href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/${cls.id}`}
+                    title="Voir les détails de la classe"
+                    className="p-1 text-gray-400 hover:text-teal-primary rounded transition-colors shrink-0"
+                  >
+                    <Info className="w-4 h-4" />
+                  </Link>
                 </div>
               </div>
               

@@ -251,7 +251,7 @@ export default function EcolesPage({
                   
                   {/* Clickable School Name -> Overview Page */}
                   <Link 
-                    href={`/${clientCode}/admin_client/ecoles/${ecole.id}`}
+                    href={`/${clientCode}/admin_client/ecoles/${ecole.id}/overview`}
                     className="flex items-center space-x-3 truncate group"
                   >
                     <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0 group-hover:bg-teal-primary/20 transition-colors">
