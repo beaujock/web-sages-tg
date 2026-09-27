@@ -7,21 +7,40 @@ import * as LucideIcons from 'lucide-react';
 import { Loader2, BookOpen, Plus, Info } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
-type ClassroomDisplay = {
-    id                       : string,
-    ecole_id                 : string,
-    ecole_label              : string,
-    annee_scolaire_id        : string,
-    annee_scolaire_label     : string,
-    classe_id                : string,
-    classe_label             : string,
-    code                     : string,
-    description              : string|null,
-    notes                    : string|null,
-    create_date              : Date,
-    created_by               : string,
-    change_date              : Date|null,
-    changed_by               : string|null
+type DisplayEcoleDO = {
+    id                       : string;
+    full_name                : string;
+    short_name               : string | null;
+    establishment_date       : Date | null;
+    code                     : string;
+    primary_contact_name     : string | null;
+    secondary_contact_name   : string | null;
+    contact_infos            : string | null;
+    phone_number             : string | null;
+    email                    : string | null;
+    website                  : string | null;
+    notes                    : string | null;
+    create_date              : Date;
+    created_by               : string;
+    change_date              : Date | null;
+    changed_by               : string | null;
+};
+
+type DisplaySalleClasseDO = {
+    id                       : string;
+    ecole_id                 : string;
+    ecole_label              : string;
+    annee_scolaire_id        : string;
+    annee_scolaire_label     : string;
+    classe_id                : string;
+    classe_label             : string;
+    code                     : string;
+    description              : string | null;
+    notes                    : string | null;
+    create_date              : Date;
+    created_by               : string;
+    change_date              : Date | null;
+    changed_by               : string | null;
 };
 
 type InfoMenuItemLinkActionDO = {
@@ -35,14 +54,14 @@ type InfoMenuItemLinkActionDO = {
 
 const renderIcon = (iconName?: string | null, className: string = "w-4 h-4 shrink-0") => {
   if (!iconName) return <LucideIcons.Settings className={className} />;
-  
+
   // Dynamically access the Lucide component based on the exact string returned from the API
   const IconComponent = (LucideIcons as any)[iconName];
-  
+
   if (!IconComponent) {
     return <LucideIcons.MoreHorizontal className={className} />;
   }
-  
+
   return <IconComponent className={className} />;
 };
 
@@ -52,18 +71,17 @@ export default function ClassesPage({
   params: Promise<{ clientCode: string; ecoleId: string }>;
 }) {
   const { clientCode, ecoleId } = use(params);
-  
-  const [classes, setClasses] = useState<ClassroomDisplay[]>([]);
+
+  const [ecole, setEcole] = useState<DisplayEcoleDO | null>(null);
+  const [salleClasses, setSalleClasses] = useState<DisplaySalleClasseDO[]>([]);
   const [pageActions, setPageActions] = useState<InfoMenuItemLinkActionDO[]>([]);
   const [classLinks, setClassLinks] = useState<InfoMenuItemLinkActionDO[]>([]);
-  const [schoolName, setSchoolName] = useState<string>("l'école");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        //const token = sessionStorage.getItem('token');
         const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
         const token = getCookie(cookieName);
 
@@ -82,31 +100,22 @@ export default function ClassesPage({
           fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/links`, { method: 'GET', headers })
         ]);
 
-        const jsonData = await resClasses.json();
+        const data = await resClasses.json();
+        if (!resClasses.ok) {
+          throw new Error(data.message || 'Erreur lors de la récupération des classes');
+        }
+
+        setEcole(data.ecole ?? null);
+        setSalleClasses(data.salleClasses ?? []);
+
         const actionsData = resActions.ok ? await resActions.json() : [];
         const linksData = resLinks.ok ? await resLinks.json() : [];
-        
-        if (resClasses.status === 400 || !resClasses.ok) {
-          throw new Error(Array.isArray(jsonData) ? jsonData : jsonData.message || []);
-        }
 
-        setClasses(Array.isArray(jsonData) ? jsonData : jsonData.salleClasses || []);
-        
         const parsedActions: InfoMenuItemLinkActionDO[] = Array.isArray(actionsData) ? actionsData : actionsData.actions || [];
         setPageActions(parsedActions.sort((a, b) => a.order - b.order));
-        
+
         const parsedLinks: InfoMenuItemLinkActionDO[] = Array.isArray(linksData) ? linksData : linksData.links || [];
         setClassLinks(parsedLinks.sort((a, b) => a.order - b.order));
-
-        console.log("Actions : ", parsedActions);
-        console.log("Links : ", parsedLinks);
-        
-        if (!Array.isArray(jsonData) && jsonData.ecole) {
-          setSchoolName(jsonData.ecole.short_name || jsonData.ecole.full_name || "l'école");
-        } else if (Array.isArray(jsonData) && jsonData.length > 0) {
-          setSchoolName(jsonData[0].ecole_label || "l'école");
-        }
-
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Une erreur est survenue');
@@ -118,21 +127,8 @@ export default function ClassesPage({
     fetchData();
   }, [clientCode, ecoleId]);
 
-  const buildUrl = (template: string, classId?: string) => {
-    let url = template
-      .replace('[codeClient]', clientCode)
-      .replace('[ecoleId]', ecoleId);
-      
-    if (classId) {
-      url = url.replace('[classId]', classId).replace('[id]', classId);
-    }
-    
-    if (!url.startsWith('/')) {
-        url = `/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/${classId ? `${classId}/${url}` : url}`;
-    }
-    
-    return url;
-  };
+  const salleClassesRoute = `/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`;
+  const schoolName = ecole?.short_name || ecole?.full_name || "l'école";
 
   if (loading) {
     return (
@@ -163,14 +159,13 @@ export default function ClassesPage({
             Accès aux classes, leurs élèves, emplois du temps, évaluations et enseignants
           </p>
         </div>
-        
+
         <div className="flex gap-2 shrink-0">
           {pageActions.length > 0 ? (
             pageActions.map(action => (
               <Link
                 key={action.id}
-                
-                href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses${action.end_route}`}
+                href={`${salleClassesRoute}${action.end_route}`}
                 title={action.description || action.display_name}
                 className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
               >
@@ -180,7 +175,7 @@ export default function ClassesPage({
             ))
           ) : (
             <Link
-              href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/addsalleclasse`}
+              href={`${salleClassesRoute}/addsalleclasse`}
               className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
             >
               <Plus className="w-5 h-5 shrink-0" />
@@ -191,29 +186,29 @@ export default function ClassesPage({
       </div>
 
       {/* ================= EMPTY STATE ================= */}
-      {classes.length === 0 ? (
+      {salleClasses.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
           <BookOpen className="w-12 h-12 text-gray-400 mb-3" />
           <p className="text-gray-500 mb-6 text-center max-w-sm">
             Aucune classe n&apos;est actuellement associée à cette école. Commencez par en ajouter une.
           </p>
           {pageActions.length > 0 && (
-             <Link
-             href={buildUrl(pageActions[0].end_route)}
-             title={pageActions[0].description || pageActions[0].display_name}
-             className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
-           >
-             {renderIcon(pageActions[0].icon_name, "w-5 h-5 shrink-0")}
-             <span className="font-medium">{pageActions[0].display_name}</span>
-           </Link>
+            <Link
+              href={`${salleClassesRoute}${pageActions[0].end_route}`}
+              title={pageActions[0].description || pageActions[0].display_name}
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
+            >
+              {renderIcon(pageActions[0].icon_name, "w-5 h-5 shrink-0")}
+              <span className="font-medium">{pageActions[0].display_name}</span>
+            </Link>
           )}
         </div>
       ) : (
         /* ================= CLASSES LIST ================= */
         <div className="flex flex-col space-y-3">
-          {classes.map((cls) => (
-            <div 
-              key={cls.id} 
+          {salleClasses.map((salleClasse) => (
+            <div
+              key={salleClasse.id}
               className="flex flex-col xl:flex-row xl:items-center justify-between p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-white gap-4"
             >
               {/* Class Info */}
@@ -222,16 +217,16 @@ export default function ClassesPage({
                   <BookOpen className="w-5 h-5" />
                 </div>
                 <div className="flex items-center gap-2 truncate">
-                  <h3 className="font-semibold text-charcoal-secondary truncate" title={cls.code}>
+                  <h3 className="font-semibold text-charcoal-secondary truncate" title={salleClasse.code}>
                     <Link
-                      href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/${cls.id}/overview`}
+                      href={`${salleClassesRoute}/${salleClasse.id}/overview`}
                       className="hover:text-teal-primary hover:underline"
                     >
-                      {cls.code || 'Classe sans nom'}
+                      {salleClasse.code || 'Classe sans nom'}
                     </Link>
                   </h3>
                   <Link
-                    href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/${cls.id}`}
+                    href={`${salleClassesRoute}/${salleClasse.id}`}
                     title="Voir les détails de la classe"
                     className="p-1 text-gray-400 hover:text-teal-primary rounded transition-colors shrink-0"
                   >
@@ -239,25 +234,20 @@ export default function ClassesPage({
                   </Link>
                 </div>
               </div>
-              
+
               {/* Dynamic Action Links */}
               <div className="flex items-center flex-wrap gap-2 shrink-0">
-                {classLinks.length > 0 ? (
-                  classLinks.map((link) => (
-                    <Link
-                      key={link.id}
-                      href={`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/${cls.id}${link.end_route}`}
-                      title={link.description || link.display_name}
-                      className="flex items-center space-x-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-                    >
-                      {renderIcon(link.icon_name)}
-                      <span className="hidden md:inline text-sm font-medium">{link.display_name}</span>
-                    </Link>
-                  ))
-                ) : (
-                  //<span className="text-sm text-gray-400 italic">Aucun lien disponible</span>
-                  <></>
-                )}
+                {classLinks.map((link) => (
+                  <Link
+                    key={link.id}
+                    href={`${salleClassesRoute}/${salleClasse.id}${link.end_route}`}
+                    title={link.description || link.display_name}
+                    className="flex items-center space-x-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                  >
+                    {renderIcon(link.icon_name)}
+                    <span className="hidden md:inline text-sm font-medium">{link.display_name}</span>
+                  </Link>
+                ))}
               </div>
             </div>
           ))}
