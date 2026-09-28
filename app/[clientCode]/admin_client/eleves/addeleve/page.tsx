@@ -37,6 +37,8 @@ export default function AddElevePage({
   // Form Data - Section 2: Registration
   const [inscriptionData, setInscriptionData] = useState({
     ecoleId: '',
+    ecoleCode: '',
+    ecoleShortName: '',
     salleclasseId: '',
     registrationDate: new Date().toISOString().split('T')[0],
     registrationNotes: '',
@@ -44,7 +46,7 @@ export default function AddElevePage({
 
   // Lookups State
   const [genders, setGenders] = useState<{ code: string; label: string }[]>([]); 
-  const [schools, setSchools] = useState<{ id: string; short_name: string; [key: string]: any }[]>([]);
+  const [schools, setSchools] = useState<{ id: string; short_name: string; code?: string; full_name?: string; [key: string]: any }[]>([]);
   const [classrooms, setClassrooms] = useState<{ id: string; code: string; [key: string]: any }[]>([]);
 
   // UI & File State
@@ -146,7 +148,20 @@ export default function AddElevePage({
 
   const handleInscriptionChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setInscriptionData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'ecoleId') {
+      const selectedSchool = schools.find((s) => s.id === value);
+      const schoolCode = selectedSchool?.code || selectedSchool?.short_name || '';
+      const schoolShortName = selectedSchool?.short_name || selectedSchool?.code || '';
+      setInscriptionData((prev) => ({
+        ...prev,
+        ecoleId: value,
+        ecoleCode: schoolCode,
+        ecoleShortName: schoolShortName,
+        salleclasseId: '',
+      }));
+    } else {
+      setInscriptionData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handlePhotoChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -211,10 +226,21 @@ export default function AddElevePage({
 
       // Step 2: Upload photo to NEON Storage
       if (photo && eleveMatricule) { 
+        const selectedSchool = schools.find((s) => s.id === inscriptionData.ecoleId);
+        const schoolCode = inscriptionData.ecoleCode || selectedSchool?.code || selectedSchool?.short_name || '';
+        const schoolShortName = inscriptionData.ecoleShortName || selectedSchool?.short_name || selectedSchool?.code || '';
+        const schoolFolder = (schoolCode || schoolShortName) ? `${(schoolCode || schoolShortName).toLowerCase()}/` : '';
+
         const photoData = new FormData(); 
         photoData.append('file', photo); 
         photoData.append('folder', `${clientCode.toLowerCase()}`); 
-        photoData.append('filename', `eleves/${eleveMatricule}.jpg`); 
+        photoData.append('filename', `${schoolFolder}eleves/${eleveMatricule.toUpperCase()}.jpg`); 
+        if (schoolCode) {
+          photoData.append('schoolCode', schoolCode);
+        }
+        if (schoolShortName) {
+          photoData.append('short_name', schoolShortName);
+        }
 
         const uploadRes = await fetch(`${API_BASE_URL}/${clientCode}/storage/uploadeleve`, {
           method: 'POST', 
