@@ -33,6 +33,76 @@ type DynamicSchoolLink = {
     description : string|null;
 };
 
+// Fetches and renders the logo of a school; falls back to the School icon if unavailable
+function EcoleLogo({ clientCode, ecoleId, alt }: { clientCode: string; ecoleId: string; alt: string }) {
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+
+    const fetchLogo = async () => {
+      try {
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const token = getCookie(cookieName);
+        if (!token) return;
+
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/getecolelogo`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ecoleId }),
+        });
+
+        if (!res.ok) return;
+
+        const contentType = res.headers.get('Content-Type') || '';
+        let src: string | null = null;
+
+        if (contentType.startsWith('image/')) {
+          const blob = await res.blob();
+          objectUrl = URL.createObjectURL(blob);
+          src = objectUrl;
+        } else {
+          const data = await res.json();
+          const value: string | undefined =
+            typeof data === 'string' ? data : data?.logo 
+          if (value) {
+            src = value.startsWith('data:') || value.startsWith('http') || value.startsWith('/')
+              ? value
+              : `data:image/png;base64,${value}`;
+          }
+        }
+
+        if (!cancelled) setLogoSrc(src);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchLogo();
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [clientCode, ecoleId]);
+
+  if (!logoSrc) return <School className="w-5 h-5" />;
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={logoSrc}
+      alt={alt}
+      className="w-5 h-5 object-contain"
+      onError={() => setLogoSrc(null)}
+    />
+  );
+}
+
 export default function EcolesPage({
   params,
 }: {
@@ -255,7 +325,7 @@ export default function EcolesPage({
                     className="flex items-center space-x-3 truncate group"
                   >
                     <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0 group-hover:bg-teal-primary/20 transition-colors">
-                      <School className="w-5 h-5" />
+                      <EcoleLogo clientCode={clientCode} ecoleId={ecole.id} alt={ecole.short_name || 'Logo école'} />
                     </div>
                     <h3 className="font-semibold text-charcoal-secondary group-hover:text-teal-primary transition-colors truncate" title={ecole.short_name}>
                       {ecole.short_name || 'École sans nom'}
