@@ -8,12 +8,16 @@ import * as LucideIcons from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 // Destructure the static icons needed for the base layout
-const { Loader2, School, Plus, Download, Link: LinkIcon } = LucideIcons;
+const { Loader2, School, Plus, Download, Link: LinkIcon, DoorOpen, GraduationCap, CalendarDays } = LucideIcons;
 
-type DisplayClientEcoleDO = {
-    id: string;
-    client_label: string;
-    short_name: string;
+type OverviewEcoleDO = {
+    id                      : string;
+    short_name              : string;
+    code                    : string;
+    annee_scolaire_id       : string;
+    annee_scolaire_label    : string;
+    number_salles_classes   : number;
+    number_eleves           : number;
 };
 
 // Types for the new dynamic API endpoints
@@ -90,14 +94,18 @@ function EcoleLogo({ clientCode, ecoleId, alt }: { clientCode: string; ecoleId: 
     };
   }, [clientCode, ecoleId]);
 
-  if (!logoSrc) return <School className="w-5 h-5" />;
+  if (!logoSrc) return (
+    <div className="w-12 h-12 flex items-center justify-center">
+      <School className="w-6 h-6" />
+    </div>
+  );
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={logoSrc}
       alt={alt}
-      className="w-5 h-5 object-contain"
+      className="w-12 h-12 object-contain"
       onError={() => setLogoSrc(null)}
     />
   );
@@ -111,7 +119,7 @@ export default function EcolesPage({
   const { clientCode } = use(params);
   const router = useRouter();
   
-  const [ecoles, setEcoles] = useState<DisplayClientEcoleDO[]>([]);
+  const [ecoles, setEcoles] = useState<OverviewEcoleDO[]>([]);
   const [pageActions, setPageActions] = useState<DynamicAction[]>([]);
   const [schoolLinks, setSchoolLinks] = useState<DynamicSchoolLink[]>([]);
   
@@ -155,15 +163,12 @@ export default function EcolesPage({
             })
         ]);
 
-        console.log("actions", actionsRes);
-        console.log("links", linksRes);
-
-        // Redirect to login if token is expired/invalid (401 Unauthorized)
-        if (ecolesRes.status === 400 || actionsRes.status === 400 || linksRes.status === 400) {
-          const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string; 
-          const token = getCookie(cookieName); 
-          if (!token && cookieName)
+        // Redirect to login if token is expired/invalid
+        const isUnauthorized = (res: Response) => res.status === 401 || res.status === 400;
+        if (isUnauthorized(ecolesRes) || isUnauthorized(actionsRes) || isUnauthorized(linksRes)) {
+          if (cookieName) {
             document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          }
           router.push('/login');
           return;
         }
@@ -324,12 +329,32 @@ export default function EcolesPage({
                     href={`/${clientCode}/admin_client/ecoles/${ecole.id}/overview`}
                     className="flex items-center space-x-3 truncate group"
                   >
-                    <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0 group-hover:bg-teal-primary/20 transition-colors">
+                    <div className="p-1 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0 group-hover:bg-teal-primary/20 transition-colors">
                       <EcoleLogo clientCode={clientCode} ecoleId={ecole.id} alt={ecole.short_name || 'Logo école'} />
                     </div>
-                    <h3 className="font-semibold text-charcoal-secondary group-hover:text-teal-primary transition-colors truncate" title={ecole.short_name}>
-                      {ecole.short_name || 'École sans nom'}
-                    </h3>
+                    <div className="truncate">
+                      <h3 className="font-semibold text-charcoal-secondary group-hover:text-teal-primary transition-colors truncate" title={ecole.short_name}>
+                        {ecole.short_name || 'École sans nom'}
+                      </h3>
+                      {ecole.annee_scolaire_label && (
+                        <div className="inline-flex items-center gap-1 mt-0.5 text-xs text-gray-500">
+                          <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                          {ecole.annee_scolaire_label}
+                        </div>
+                      )}
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-sm text-gray-600">
+                        <span className="inline-flex items-center gap-1" title="Salles de classe">
+                          <DoorOpen className="w-4 h-4 shrink-0 text-teal-primary" />
+                          <span className="font-semibold text-charcoal-secondary">{ecole.number_salles_classes}</span>
+                          <span className="hidden sm:inline">Classes</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1" title="Élèves">
+                          <GraduationCap className="w-4 h-4 shrink-0 text-teal-primary" />
+                          <span className="font-semibold text-charcoal-secondary">{ecole.number_eleves}</span>
+                          <span className="hidden sm:inline">élèves</span>
+                        </span>
+                      </div>
+                    </div>
                   </Link>
 
                   {/* Static Detail and Update Buttons */}

@@ -1,22 +1,74 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import * as LucideIcons from 'lucide-react';
+import { LayoutDashboard, LayoutTemplate, LogOut, Settings, UserCheck } from 'lucide-react';
+import { DynamicIcon, iconNames, type IconName } from 'lucide-react/dynamic';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type SagesMenuItem = {
   display_name: string;
-  icon_name: string | null;
+  icon_name: string | null; // kebab-case Lucide name, e.g. "door-open", "notebook-pen"
   end_route: string;
   active: boolean;
 };
 
+const ICON_CLASS = 'w-5 h-5 shrink-0';
+const validIconNames = new Set<string>(iconNames);
+
+const isIconName = (name: string | null): name is IconName =>
+  !!name && validIconNames.has(name);
+
+function MenuIcon({ name, active }: { name: string | null; active: boolean }) {
+  const strokeWidth = active ? 2 : 1.5;
+  const normalized = name?.trim().toLowerCase() ?? null;
+
+  if (!isIconName(normalized)) {
+    return <LayoutTemplate className={ICON_CLASS} strokeWidth={strokeWidth} />;
+  }
+
+  return (
+    <DynamicIcon
+      name={normalized}
+      className={ICON_CLASS}
+      strokeWidth={strokeWidth}
+      // Placeholder of the same size while the icon chunk loads, to avoid layout shift
+      fallback={() => <span className={`${ICON_CLASS} inline-block`} />}
+    />
+  );
+}
+
+function NavLink({
+  href,
+  label,
+  active,
+  icon,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  icon: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center justify-center md:justify-start md:space-x-3 px-2 md:px-4 py-3 rounded-md transition-all duration-200 ${
+        active
+          ? 'bg-teal-primary text-white'
+          : 'text-gray-300 hover:bg-teal-primary hover:bg-opacity-20 hover:text-white'
+      }`}
+      title={label}
+    >
+      {icon}
+      <span className="hidden md:block font-medium text-sm truncate">{label}</span>
+    </Link>
+  );
+}
+
 export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, clientCode: string }) {
   const [menuItems, setMenuItems] = useState<SagesMenuItem[]>([]);
-  const [userFullName, setUserFullName] = useState<string>(''); 
+  const [userFullName, setUserFullName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
@@ -24,40 +76,35 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
   useEffect(() => {
     const fetchConnectionInfos = async () => {
       try {
-        //const connectionToken = sessionStorage.getItem('token');
         const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
         const connectionToken = getCookie(cookieName);
 
         if (!connectionToken) {
-          console.warn("No token found in session storage.");
-          setLoading(false);
+          console.warn("No token found in cookies.");
           return;
         }
-        
+
         const response = await fetch(`${API_BASE_URL}/${clientCode}/${roleCode}/menu`, {
-            method: 'GET',
-            headers: {
+          method: 'GET',
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${connectionToken}`,
           },
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to fetch connection infos');
         }
 
         const data = await response.json();
-        console.log("Connection infos data", data);
-        
-        if (data.menuItems) {
-          console.log("MenuItems : ", data.menuItems);
-            setMenuItems(data.menuItems.filter((item: SagesMenuItem) => item.active));
+
+        if (Array.isArray(data.menuItems)) {
+          setMenuItems(data.menuItems.filter((item: SagesMenuItem) => item.active));
         }
 
         if (data.userFullName) {
-            setUserFullName(data.userFullName);
+          setUserFullName(data.userFullName);
         }
-
       } catch (error) {
         console.error("Failed to load connection infos:", error);
       } finally {
@@ -92,52 +139,35 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
 
   return (
     <aside className="w-16 md:w-64 min-h-screen bg-charcoal-secondary text-white flex flex-col shadow-lg shrink-0 transition-all duration-300">
-      
+
       <nav className="flex-1 p-2 md:p-4 space-y-2 overflow-y-auto">
-        
+
         <div className="hidden md:flex flex-col px-2 md:px-4 py-2 mb-2 border-b border-gray-700/50 pb-4">
           <div className="flex items-center space-x-2">
-            <LucideIcons.UserCheck className="w-4 h-4 text-teal-primary" />
+            <UserCheck className="w-4 h-4 text-teal-primary" />
             <span className="font-semibold text-sm truncate text-white">{userFullName}</span>
           </div>
         </div>
 
-        {/* Dashboard Link */}
-        <Link 
+        <NavLink
           href={dashboardHref}
-          className={`flex items-center justify-center md:justify-start md:space-x-3 px-2 md:px-4 py-3 rounded-md transition-all duration-200 ${
-            isDashboardActive 
-              ? 'bg-teal-primary text-white' 
-              : 'text-gray-300 hover:bg-teal-primary hover:bg-opacity-20 hover:text-white'
-          }`}
-          title="Tableau de bord"
-        >
-          <LucideIcons.LayoutDashboard className="w-5 h-5 shrink-0" strokeWidth={isDashboardActive ? 2 : 1.5} />
-          <span className="hidden md:block font-medium text-sm truncate">Tableau de bord</span>
-        </Link>
+          label="Tableau de bord"
+          active={isDashboardActive}
+          icon={<LayoutDashboard className={ICON_CLASS} strokeWidth={isDashboardActive ? 2 : 1.5} />}
+        />
 
-        {menuItems.length > 0 ? menuItems.map((item, index) => {
-          // Dynamically resolves the exact component name (e.g., "NotebookPen") from the Lucide module
-          const IconComponent = (item.icon_name && LucideIcons[item.icon_name as keyof typeof LucideIcons] as React.ElementType) 
-            || LucideIcons.LayoutTemplate;
-          
+        {menuItems.length > 0 ? menuItems.map((item) => {
           const href = `/${clientCode}/${roleCode}${item.end_route}`;
           const isActive = pathname === href;
 
           return (
-            <Link 
-              key={index} 
+            <NavLink
+              key={item.end_route}
               href={href}
-              className={`flex items-center justify-center md:justify-start md:space-x-3 px-2 md:px-4 py-3 rounded-md transition-all duration-200 ${
-                isActive 
-                  ? 'bg-teal-primary text-white' 
-                  : 'text-gray-300 hover:bg-teal-primary hover:bg-opacity-20 hover:text-white'
-              }`}
-              title={item.display_name} 
-            >
-              <IconComponent className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2 : 1.5} />
-              <span className="hidden md:block font-medium text-sm truncate">{item.display_name}</span>
-            </Link>
+              label={item.display_name}
+              active={isActive}
+              icon={<MenuIcon name={item.icon_name} active={isActive} />}
+            />
           );
         }) : (
           <span className="text-coral-accent text-sm px-2 md:px-4 hidden md:block">Aucun menu disponible.</span>
@@ -146,25 +176,19 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
 
       {/* Sidebar Footer */}
       <div className="p-2 md:p-4 border-t border-gray-700 flex flex-col space-y-2">
-        <Link 
+        <NavLink
           href={settingsHref}
-          className={`flex items-center justify-center md:justify-start md:space-x-3 w-full px-2 md:px-4 py-2.5 rounded-md transition-all duration-200 ${
-            isSettingsActive
-              ? 'bg-teal-primary text-white' 
-              : 'text-gray-300 hover:bg-teal-primary hover:bg-opacity-20 hover:text-white'
-          }`}
-          title="Paramétrages"
-        >
-          <LucideIcons.Settings className="w-5 h-5 shrink-0" strokeWidth={isSettingsActive ? 2 : 1.5} />
-          <span className="hidden md:block font-medium text-sm truncate">Paramétrages</span>
-        </Link>
+          label="Paramétrages"
+          active={isSettingsActive}
+          icon={<Settings className={ICON_CLASS} strokeWidth={isSettingsActive ? 2 : 1.5} />}
+        />
 
-        <button 
+        <button
           onClick={handleLogout}
           className="flex items-center justify-center md:justify-start md:space-x-3 w-full px-2 md:px-4 py-2.5 rounded-md text-gray-300 hover:bg-coral-accent hover:text-white transition-all duration-200"
           title="Se déconnecter"
         >
-          <LucideIcons.LogOut className="w-5 h-5 shrink-0" strokeWidth={1.5} />
+          <LogOut className={ICON_CLASS} strokeWidth={1.5} />
           <span className="hidden md:block font-medium text-sm truncate">Se déconnecter</span>
         </button>
       </div>

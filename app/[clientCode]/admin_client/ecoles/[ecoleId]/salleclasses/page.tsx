@@ -4,7 +4,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
-import { Loader2, BookOpen, Plus, Info } from 'lucide-react';
+import { Loader2, BookOpen, Plus, Info, CalendarDays, GraduationCap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type DisplayEcoleDO = {
@@ -26,21 +26,12 @@ type DisplayEcoleDO = {
     changed_by               : string | null;
 };
 
-type DisplaySalleClasseDO = {
+type OverviewSalleClasseDO = {
     id                       : string;
-    ecole_id                 : string;
-    ecole_label              : string;
+    code                     : string;
     annee_scolaire_id        : string;
     annee_scolaire_label     : string;
-    classe_id                : string;
-    classe_label             : string;
-    code                     : string;
-    description              : string | null;
-    notes                    : string | null;
-    create_date              : Date;
-    created_by               : string;
-    change_date              : Date | null;
-    changed_by               : string | null;
+    number_eleves            : number;
 };
 
 type InfoMenuItemLinkActionDO = {
@@ -65,6 +56,8 @@ const renderIcon = (iconName?: string | null, className: string = "w-4 h-4 shrin
   return <IconComponent className={className} />;
 };
 
+const isElevesLink = (link: InfoMenuItemLinkActionDO) => /^\/eleves(\/|$)/i.test(link.end_route);
+
 export default function ClassesPage({
   params,
 }: {
@@ -73,7 +66,7 @@ export default function ClassesPage({
   const { clientCode, ecoleId } = use(params);
 
   const [ecole, setEcole] = useState<DisplayEcoleDO | null>(null);
-  const [salleClasses, setSalleClasses] = useState<DisplaySalleClasseDO[]>([]);
+  const [salleClasses, setSalleClasses] = useState<OverviewSalleClasseDO[]>([]);
   const [pageActions, setPageActions] = useState<InfoMenuItemLinkActionDO[]>([]);
   const [classLinks, setClassLinks] = useState<InfoMenuItemLinkActionDO[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,33 +209,51 @@ export default function ClassesPage({
                 <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0">
                   <BookOpen className="w-5 h-5" />
                 </div>
-                <div className="flex items-center gap-2 truncate">
-                  <h3 className="font-semibold text-charcoal-secondary truncate" title={salleClasse.code}>
+                <div className="truncate">
+                  <div className="flex items-center gap-2 truncate">
+                    <h3 className="font-semibold text-charcoal-secondary truncate" title={salleClasse.code}>
+                      <Link
+                        href={`${salleClassesRoute}/${salleClasse.id}`}
+                        className="hover:text-teal-primary hover:underline"
+                      >
+                        {salleClasse.code || 'Classe sans nom'}
+                      </Link>
+                    </h3>
                     <Link
-                      href={`${salleClassesRoute}/${salleClasse.id}/overview`}
-                      className="hover:text-teal-primary hover:underline"
+                      href={`${salleClassesRoute}/${salleClasse.id}`}
+                      title="Voir les détails de la classe"
+                      className="p-1 text-gray-400 hover:text-teal-primary rounded transition-colors shrink-0"
                     >
-                      {salleClasse.code || 'Classe sans nom'}
+                      <Info className="w-4 h-4" />
                     </Link>
-                  </h3>
-                  <Link
-                    href={`${salleClassesRoute}/${salleClasse.id}`}
-                    title="Voir les détails de la classe"
-                    className="p-1 text-gray-400 hover:text-teal-primary rounded transition-colors shrink-0"
-                  >
-                    <Info className="w-4 h-4" />
-                  </Link>
+                  </div>
+                  {salleClasse.annee_scolaire_label && (
+                    <div className="inline-flex items-center gap-1 text-xs text-gray-500">
+                      <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                      {salleClasse.annee_scolaire_label}
+                    </div>
+                  )}
+                  <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-sm text-gray-600">
+                    <span className="inline-flex items-center gap-1" title="Élèves">
+                      <GraduationCap className="w-4 h-4 shrink-0 text-teal-primary" />
+                      <span className="font-semibold text-charcoal-secondary">{salleClasse.number_eleves}</span>
+                      <span className="hidden sm:inline">élèves</span>
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Dynamic Action Links */}
               <div className="flex items-center flex-wrap gap-2 shrink-0">
-                {classLinks.map((link) => (
+                {classLinks
+                  // Hide the élèves link when the class has no students
+                  .filter((link) => salleClasse.number_eleves > 0 || !isElevesLink(link))
+                  .map((link) => (
                   <Link
                     key={link.id}
                     href={`${salleClassesRoute}/${salleClasse.id}${link.end_route}`}
                     title={link.description || link.display_name}
-                    className="flex items-center space-x-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="flex items-center space-x-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
                   >
                     {renderIcon(link.icon_name)}
                     <span className="hidden md:inline text-sm font-medium">{link.display_name}</span>

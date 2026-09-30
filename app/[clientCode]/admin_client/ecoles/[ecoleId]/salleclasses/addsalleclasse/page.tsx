@@ -5,14 +5,15 @@ import { useState, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ArrowLeft, Save, BookOpen } from 'lucide-react';
-import { API_BASE_URL } from '@/lib/auth';
+import { API_BASE_URL, getCookie, verifyUser } from '@/lib/auth';
 
-export type AdminClientCreateSalleClasseDO = {
+type CreateSalleClasseDO = {
     ecole_id                 : string;
     classe_id                : string;
     code                     : string;
     description              : string|null;
-    notes                    : string|null
+    notes                    : string|null;
+    created_by               : string;
 };
 
 type BaseClass = {
@@ -43,10 +44,15 @@ export default function CreateClassroomPage({
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const token = sessionStorage.getItem('token');
-        if (!token) return;
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const token = getCookie(cookieName);
 
-        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`, {
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/lisclasses`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -54,8 +60,16 @@ export default function CreateClassroomPage({
           },
         });
 
+        if (res.status === 401 || res.status === 400) {
+          if (cookieName) {
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          }
+          router.push('/login');
+          return;
+        }
+
         const jsonData = await res.json();
-        
+
         if (!res.ok) {
           throw new Error(jsonData.message || 'Erreur lors du chargement des classes');
         }
@@ -63,13 +77,14 @@ export default function CreateClassroomPage({
         setBaseClasses(Array.isArray(jsonData) ? jsonData : jsonData.classes || []);
       } catch (err: any) {
         console.error(err);
+        setError(err.message || 'Erreur lors du chargement des classes');
       } finally {
         setLoadingClasses(false);
       }
     };
 
     fetchClasses();
-  }, [clientCode, ecoleId]);
+  }, [clientCode, ecoleId, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -81,18 +96,30 @@ export default function CreateClassroomPage({
     setError('');
 
     try {
-      const token = sessionStorage.getItem('token');
+      const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+      const token = getCookie(cookieName);
 
       if (!token) {
-        throw new Error("Errur de connexion. Veuillez vous reconnecter.");
+        router.push('/login');
+        return;
       }
 
-      const payload: AdminClientCreateSalleClasseDO = {
+      const user = await verifyUser(token);
+      if (!user) {
+        if (cookieName) {
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+        router.push('/login');
+        return;
+      }
+
+      const payload: CreateSalleClasseDO = {
         ecole_id: ecoleId,
         classe_id: formData.classe_id,
         code: formData.code,
         description: formData.description || null,
-        notes: formData.notes || null
+        notes: formData.notes || null,
+        created_by: user.userId,
       };
 
       const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/addsalleclasse`, {
@@ -104,19 +131,16 @@ export default function CreateClassroomPage({
         body: JSON.stringify(payload)
       });
 
-      console.log("Result : ", res);
-
       const jsonData = await res.json();
 
       if (!res.ok) {
         setError(jsonData.message);
         setIsSubmitting(false);
-        //throw new Error(jsonData.message || '');
-        //setError(jsonData.message);
+        return;
       }
 
-      if (res.ok) router.push(`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`);
-      
+      router.push(`/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`);
+
     } catch (err: any) {
       console.error(err);
       setError("Erreur Système. Réessayer. Si l'erreur insiste, contactez votre administrateur");

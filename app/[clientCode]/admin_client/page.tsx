@@ -3,13 +3,18 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { School, Layers, Users, ArrowRight, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { School, DoorOpen, ClipboardList, Layers, CalendarDays, ArrowRight, Loader2 } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
-type DashboardData = {
-  clientEcoles: any[] | number;
-  clientModules: any[] | number;
-  clientActiveUsers: any[] | number;
+type OverviewDO = {
+    id                          : string;
+    annee_scolaire_id           : string;
+    annee_scolaire_label        : string;
+    number_ecoles               : number;
+    number_salle_classes        : number;
+    number_eleve_inscriptions   : number;
+    number_modules              : number;
 };
 
 export default function AdminClientDashboard({
@@ -18,17 +23,22 @@ export default function AdminClientDashboard({
   params: Promise<{ clientCode: string }>;
 }) {
   const { clientCode } = use(params);
-  
-  const [data, setData] = useState<DashboardData | null>(null);
+  const router = useRouter();
+
+  const [overview, setOverview] = useState<OverviewDO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchOverview = async () => {
       try {
-        // The proxy guarantees we have a token. We only need to retrieve it for the fetch headers.
         const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
         const token = getCookie(cookieName);
+
+        if (!token) {
+          router.push('/login');
+          return;
+        }
 
         const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client`, {
           method: 'GET',
@@ -38,12 +48,20 @@ export default function AdminClientDashboard({
           },
         });
 
+        if (res.status === 401 || res.status === 400) {
+          if (cookieName) {
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          }
+          router.push('/login');
+          return;
+        }
+
         if (!res.ok) {
           throw new Error('Erreur lors de la récupération des données du tableau de bord');
         }
 
-        const jsonData = await res.json();
-        setData(jsonData);
+        const data = await res.json();
+        setOverview(data.overview);
       } catch (err: any) {
         console.error(err);
         setError(err.message || 'Une erreur est survenue');
@@ -52,104 +70,99 @@ export default function AdminClientDashboard({
       }
     };
 
-    fetchDashboardData();
-  }, [clientCode]);
+    fetchOverview();
+  }, [clientCode, router]);
 
-  // Handle Loading State
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-100">
-        <Loader2 className="w-8 h-8 text-teal-600 animate-spin mb-4" />
+      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+        <Loader2 className="w-8 h-8 text-teal-primary animate-spin mb-4" />
         <p className="text-gray-500">Chargement de votre tableau de bord...</p>
       </div>
     );
   }
 
-  // Handle Error State
-  if (error) {
+  if (error || !overview) {
     return (
       <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
-        {error}
+        {error || "Les données du tableau de bord n'ont pas pu être chargées."}
       </div>
     );
   }
 
-  // Helper to safely get the count
-  const getCount = (field: any[] | number | undefined) => {
-    if (Array.isArray(field)) return field.length;
-    if (typeof field === 'number') return field;
-    return 0;
-  };
-
   const widgets = [
     {
       title: 'Écoles',
-      count: getCount(data?.clientEcoles),
+      count: overview.number_ecoles,
       icon: School,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
       link: `/${clientCode}/admin_client/ecoles`,
       linkText: 'Voir les écoles',
     },
     {
-      title: 'Modules',
-      count: getCount(data?.clientModules),
-      icon: Layers,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-      link: `/${clientCode}/admin_client/modules`,
-      linkText: 'Voir les modules',
+      title: 'Classes',
+      count: overview.number_salle_classes,
+      icon: DoorOpen,
+      link: `/${clientCode}/admin_client/salleclasses`,
+      linkText: 'Voir les salles',
     },
     {
-      title: 'Utilisateurs Actifs',
-      count: getCount(data?.clientActiveUsers),
-      icon: Users,
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-100',
-      link: `/${clientCode}/admin_client/utilisateurs`,
-      linkText: 'Voir les utilisateurs',
+      title: 'Inscriptions',
+      count: overview.number_eleve_inscriptions,
+      icon: ClipboardList,
+      link: `/${clientCode}/admin_client/inscriptions`,
+      linkText: 'Voir les inscriptions',
+    },
+    {
+      title: 'Modules',
+      count: overview.number_modules,
+      icon: Layers,
+      link: `/${clientCode}/admin_client/modules`,
+      linkText: 'Voir vos modules',
     },
   ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">Vue d&apos;ensemble</h2>
-        <p className="text-sm text-gray-500 mt-1">
-          Environement client.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-charcoal-secondary">Vue d&apos;ensemble</h2>
+          <p className="text-sm text-gray-500 mt-1">Environnement client.</p>
+        </div>
+
+        <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 text-teal-primary rounded-lg font-medium">
+          <CalendarDays className="w-5 h-5" />
+          <span>Année scolaire : {overview.annee_scolaire_label}</span>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {widgets.map((widget, index) => {
-          const Icon = widget.icon;
-
-          return (
-            <div 
-              key={index} 
-              className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between transition-shadow hover:shadow-md"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-700">{widget.title}</h3>
-                <div className={`p-3 rounded-full ${widget.bgColor}`}>
-                  <Icon className={`w-6 h-6 ${widget.color}`} strokeWidth={2} />
-                </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {widgets.map(({ title, count, icon: Icon, link, linkText }) => (
+          <div
+            key={title}
+            className="bg-white border border-gray-100 rounded-xl shadow-sm p-6 flex flex-col justify-between transition-shadow hover:shadow-md"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
+              <div className="p-3 rounded-full bg-teal-50">
+                <Icon className="w-6 h-6 text-teal-primary" strokeWidth={2} />
               </div>
-              
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-gray-900">{widget.count}</span>
-              </div>
+            </div>
 
-              <Link 
-                href={widget.link}
-                className="inline-flex items-center text-sm font-medium text-teal-600 hover:text-teal-800 transition-colors group"
+            <div className="mb-6">
+              <span className="text-4xl font-bold text-gray-900">{count}</span>
+            </div>
+
+            {link && (
+              <Link
+                href={link}
+                className="inline-flex items-center text-sm font-medium text-teal-primary hover:text-[#005f73] transition-colors group"
               >
-                {widget.linkText}
+                {linkText}
                 <ArrowRight className="w-4 h-4 ml-1 transform group-hover:translate-x-1 transition-transform" />
               </Link>
-            </div>
-          );
-        })}
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
