@@ -8,6 +8,11 @@ import { CalendarDays, ClipboardList, DoorOpen, Download, Link as LinkIcon, Load
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
 
+type AnneeScolaireDO = {
+    id: string;
+    label: string;
+};
+
 type DisplayInscriptionDO = {
     id                          : string;
     salle_classe_id             : string;
@@ -66,6 +71,7 @@ export default function InscriptionsPage({
   const { clientCode } = use(params);
   const router = useRouter();
 
+  const [anneeScolaire, setAnneeScolaire] = useState<AnneeScolaireDO | null>(null);
   const [inscriptions, setInscriptions] = useState<DisplayInscriptionDO[]>([]);
   const [pageActions, setPageActions] = useState<DynamicAction[]>([]);
   const [inscriptionLinks, setInscriptionLinks] = useState<DynamicInscriptionLink[]>([]);
@@ -112,6 +118,8 @@ export default function InscriptionsPage({
         const actionsData = actionsRes.ok ? await actionsRes.json() : [];
         const linksData = linksRes.ok ? await linksRes.json() : [];
 
+        // Inscriptions are scoped to the client's current school year, returned alongside the list
+        setAnneeScolaire(inscriptionsData.anneescolaire ?? null);
         setInscriptions(Array.isArray(inscriptionsData) ? inscriptionsData : inscriptionsData.inscriptions || []);
         setPageActions(Array.isArray(actionsData) ? actionsData : actionsData.actions || []);
         setInscriptionLinks(Array.isArray(linksData) ? linksData : linksData.links || []);
@@ -162,7 +170,8 @@ export default function InscriptionsPage({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `inscriptions_statistiques_${new Date().toISOString().split('T')[0]}.pdf`;
+      const yearSuffix = anneeScolaire?.label ? `_${anneeScolaire.label.replace(/[^\w-]+/g, '-')}` : '';
+      a.download = `inscriptions${yearSuffix}_${new Date().toISOString().split('T')[0]}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -200,6 +209,12 @@ export default function InscriptionsPage({
           <p className="text-sm text-gray-500 mt-1">
             Gérez les inscriptions des élèves dans vos établissements.
           </p>
+          {anneeScolaire?.label && (
+            <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-teal-50 text-teal-primary rounded-lg text-sm font-medium">
+              <CalendarDays className="w-4 h-4 shrink-0" />
+              <span>Année scolaire : {anneeScolaire.label}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center flex-wrap gap-3">
@@ -238,7 +253,9 @@ export default function InscriptionsPage({
         <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
           <ClipboardList className="w-12 h-12 text-gray-400 mb-3" />
           <p className="text-gray-500 mb-6 text-center max-w-sm">
-            Aucune inscription n&apos;est actuellement enregistrée. Commencez par en ajouter une.
+            {anneeScolaire?.label
+              ? <>Aucune inscription n&apos;est enregistrée pour l&apos;année scolaire {anneeScolaire.label}. Commencez par en ajouter une.</>
+              : <>Aucune inscription n&apos;est actuellement enregistrée. Commencez par en ajouter une.</>}
           </p>
           <Link
             href={`/${clientCode}/admin_client/inscriptions/addinscription`}
