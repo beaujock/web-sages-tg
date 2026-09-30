@@ -4,11 +4,9 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import * as LucideIcons from 'lucide-react';
+import { CalendarDays, DoorOpen, Download, GraduationCap, Link as LinkIcon, Loader2, Plus, School, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
-
-// Destructure the static icons needed for the base layout
-const { Loader2, School, Plus, Download, Link: LinkIcon, DoorOpen, GraduationCap, CalendarDays } = LucideIcons;
+import { LucideIconByName } from '@/components/LucideIconByName';
 
 type OverviewEcoleDO = {
     id                      : string;
@@ -20,22 +18,16 @@ type OverviewEcoleDO = {
     number_eleves           : number;
 };
 
-// Types for the new dynamic API endpoints
+// Types for the dynamic API endpoints; icon_name is a kebab-case Lucide name (e.g. "door-open", "notebook-pen")
 type DynamicAction = {
     id: string;
     display_name: string;
-    icon_name : string;
+    icon_name : string | null;
     end_route : string;
     description : string|null;
 };
 
-type DynamicSchoolLink = {
-    id: string;
-    display_name: string;
-    icon_name : string;
-    end_route : string;
-    description : string|null;
-};
+type DynamicSchoolLink = DynamicAction;
 
 // Fetches and renders the logo of a school; falls back to the School icon if unavailable
 function EcoleLogo({ clientCode, ecoleId, alt }: { clientCode: string; ecoleId: string; alt: string }) {
@@ -266,20 +258,17 @@ export default function EcolesPage({
         
         <div className="flex items-center flex-wrap gap-3">
           {/* Dynamic Page Actions */}
-          {pageActions.map((action) => {
-            const ActionIcon = LucideIcons[action.icon_name as keyof typeof LucideIcons] as React.ElementType;
-            
-            return (
-              <Link
-                key={action.id}
-                href={`/${clientCode}/admin_client/ecoles${action.end_route}`}
-                className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-              >
-                {ActionIcon && <ActionIcon className="w-5 h-5 shrink-0" />}
-                <span className="font-medium">{action.display_name}</span>
-              </Link>
-            );
-          })}
+          {pageActions.map((action) => (
+            <Link
+              key={action.id}
+              href={`/${clientCode}/admin_client/ecoles${action.end_route}`}
+              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+              title={action.description || undefined}
+            >
+              <LucideIconByName name={action.icon_name} fallback={Zap} className="w-5 h-5 shrink-0" />
+              <span className="font-medium">{action.display_name}</span>
+            </Link>
+          ))}
 
           {/* Download PDF Button */}
           <button
@@ -376,25 +365,17 @@ export default function EcolesPage({
                 
                 {/* Right Side: Dynamic Action Links per School */}
                 <div className="flex items-center flex-wrap gap-2 shrink-0">
-                  {schoolLinks.map((link) => {
-                    const LinkActionIcon = LucideIcons[link.icon_name as keyof typeof LucideIcons] as React.ElementType;
-                    
-                    return (
-                      <Link
-                        key={link.id}
-                        href={`/${clientCode}/admin_client/ecoles/${ecole.id}${link.end_route}`}
-                        className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
-                        title={link.description || ' '}
-                      >
-                        {LinkActionIcon ? (
-                          <LinkActionIcon className="w-4 h-4 shrink-0" />
-                        ) : (
-                          <LinkIcon className="w-4 h-4 shrink-0" />
-                        )}
-                        <span className="text-sm font-medium">{link.display_name}</span>
-                      </Link>
-                    )
-                  })}
+                  {schoolLinks.map((link) => (
+                    <Link
+                      key={link.id}
+                      href={`/${clientCode}/admin_client/ecoles/${ecole.id}${link.end_route}`}
+                      className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
+                      title={link.description || undefined}
+                    >
+                      <LucideIconByName name={link.icon_name} fallback={LinkIcon} className="w-4 h-4 shrink-0" />
+                      <span className="text-sm font-medium">{link.display_name}</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
             );

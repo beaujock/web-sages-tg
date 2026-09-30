@@ -4,8 +4,8 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, LayoutTemplate, LogOut, Settings, UserCheck } from 'lucide-react';
-import { DynamicIcon, iconNames, type IconName } from 'lucide-react/dynamic';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
+import { LucideIconByName } from '@/components/LucideIconByName';
 
 type SagesMenuItem = {
   display_name: string;
@@ -15,29 +15,6 @@ type SagesMenuItem = {
 };
 
 const ICON_CLASS = 'w-5 h-5 shrink-0';
-const validIconNames = new Set<string>(iconNames);
-
-const isIconName = (name: string | null): name is IconName =>
-  !!name && validIconNames.has(name);
-
-function MenuIcon({ name, active }: { name: string | null; active: boolean }) {
-  const strokeWidth = active ? 2 : 1.5;
-  const normalized = name?.trim().toLowerCase() ?? null;
-
-  if (!isIconName(normalized)) {
-    return <LayoutTemplate className={ICON_CLASS} strokeWidth={strokeWidth} />;
-  }
-
-  return (
-    <DynamicIcon
-      name={normalized}
-      className={ICON_CLASS}
-      strokeWidth={strokeWidth}
-      // Placeholder of the same size while the icon chunk loads, to avoid layout shift
-      fallback={() => <span className={`${ICON_CLASS} inline-block`} />}
-    />
-  );
-}
 
 function NavLink({
   href,
@@ -166,7 +143,7 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
               href={href}
               label={item.display_name}
               active={isActive}
-              icon={<MenuIcon name={item.icon_name} active={isActive} />}
+              icon={<LucideIconByName name={item.icon_name} fallback={LayoutTemplate} className={ICON_CLASS} strokeWidth={isActive ? 2 : 1.5} />}
             />
           );
         }) : (
