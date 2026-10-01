@@ -103,7 +103,7 @@ export default function AdminClientDashboard({
       count: overview.number_salle_classes,
       icon: DoorOpen,
       link: `/${clientCode}/admin_client/salleclasses`,
-      linkText: 'Voir les salles',
+      linkText: 'Voir les classes',
     },
     {
       title: 'Inscriptions',

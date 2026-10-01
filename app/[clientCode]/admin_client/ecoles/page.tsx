@@ -8,12 +8,22 @@ import { CalendarDays, DoorOpen, Download, GraduationCap, Link as LinkIcon, Load
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
 
+type DisplayAnneeScolaireDO = {
+    id             : string;
+    start_date     : Date;
+    end_date       : Date;
+    label          : string;
+    notes          : string|null;
+    create_date    : Date;
+    created_by     : string;
+    change_date    : Date|null;
+    changed_by     : string|null;
+};
+
 type OverviewEcoleDO = {
     id                      : string;
     short_name              : string;
     code                    : string;
-    annee_scolaire_id       : string;
-    annee_scolaire_label    : string;
     number_salles_classes   : number;
     number_eleves           : number;
 };
@@ -110,7 +120,8 @@ export default function EcolesPage({
 }) {
   const { clientCode } = use(params);
   const router = useRouter();
-  
+
+  const [anneeScolaire, setAnneeScolaire] = useState<DisplayAnneeScolaireDO | null>(null);
   const [ecoles, setEcoles] = useState<OverviewEcoleDO[]>([]);
   const [pageActions, setPageActions] = useState<DynamicAction[]>([]);
   const [schoolLinks, setSchoolLinks] = useState<DynamicSchoolLink[]>([]);
@@ -171,6 +182,8 @@ export default function EcolesPage({
         const actionsData = actionsRes.ok ? await actionsRes.json() : [];
         const linksData = linksRes.ok ? await linksRes.json() : [];
 
+        // Schools are listed for the client's current school year, returned alongside the list
+        setAnneeScolaire(ecolesData.anneescolaire ?? null);
         setEcoles(Array.isArray(ecolesData) ? ecolesData : ecolesData.ecoles || []);
         setPageActions(Array.isArray(actionsData) ? actionsData : actionsData.actions || []);
         setSchoolLinks(Array.isArray(linksData) ? linksData : linksData.links || []);
@@ -254,6 +267,12 @@ export default function EcolesPage({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-charcoal-secondary">Liste de vos Écoles</h2>
+          {anneeScolaire?.label && (
+            <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-teal-50 text-teal-primary rounded-lg text-sm font-medium">
+              <CalendarDays className="w-4 h-4 shrink-0" />
+              <span>Année scolaire : {anneeScolaire.label}</span>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center flex-wrap gap-3">
@@ -325,12 +344,6 @@ export default function EcolesPage({
                       <h3 className="font-semibold text-charcoal-secondary group-hover:text-teal-primary transition-colors truncate" title={ecole.short_name}>
                         {ecole.short_name || 'École sans nom'}
                       </h3>
-                      {ecole.annee_scolaire_label && (
-                        <div className="inline-flex items-center gap-1 mt-0.5 text-xs text-gray-500">
-                          <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-                          {ecole.annee_scolaire_label}
-                        </div>
-                      )}
                       <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-sm text-gray-600">
                         <span className="inline-flex items-center gap-1" title="Salles de classe">
                           <DoorOpen className="w-4 h-4 shrink-0 text-teal-primary" />
