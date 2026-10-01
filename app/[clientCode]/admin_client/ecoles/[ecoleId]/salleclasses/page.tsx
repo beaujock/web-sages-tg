@@ -4,7 +4,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import * as LucideIcons from 'lucide-react';
-import { Loader2, BookOpen, Plus, Info, CalendarDays, GraduationCap } from 'lucide-react';
+import { Loader2, BookOpen, Plus, CalendarDays, GraduationCap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type DisplayEcoleDO = {
@@ -26,11 +26,21 @@ type DisplayEcoleDO = {
     changed_by               : string | null;
 };
 
+type DisplayAnneeScolaireDO = {
+    id             : string;
+    start_date     : Date;
+    end_date       : Date;
+    label          : string;
+    notes          : string | null;
+    create_date    : Date;
+    created_by     : string;
+    change_date    : Date | null;
+    changed_by     : string | null;
+};
+
 type OverviewSalleClasseDO = {
     id                       : string;
     code                     : string;
-    annee_scolaire_id        : string;
-    annee_scolaire_label     : string;
     number_eleves            : number;
 };
 
@@ -65,6 +75,7 @@ export default function ClassesPage({
 }) {
   const { clientCode, ecoleId } = use(params);
 
+  const [anneeScolaire, setAnneeScolaire] = useState<DisplayAnneeScolaireDO | null>(null);
   const [ecole, setEcole] = useState<DisplayEcoleDO | null>(null);
   const [salleClasses, setSalleClasses] = useState<OverviewSalleClasseDO[]>([]);
   const [pageActions, setPageActions] = useState<InfoMenuItemLinkActionDO[]>([]);
@@ -98,6 +109,7 @@ export default function ClassesPage({
           throw new Error(data.message || 'Erreur lors de la récupération des classes');
         }
 
+        setAnneeScolaire(data.anneescolaire ?? null);
         setEcole(data.ecole ?? null);
         setSalleClasses(data.salleClasses ?? []);
 
@@ -148,9 +160,12 @@ export default function ClassesPage({
           <h2 className="text-2xl font-bold text-charcoal-secondary">
             Classes ({schoolName})
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Accès aux classes, leurs élèves, emplois du temps, évaluations et enseignants
-          </p>
+          {anneeScolaire?.label && (
+            <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-teal-50 text-teal-primary rounded-lg text-sm font-medium">
+              <CalendarDays className="w-4 h-4 shrink-0" />
+              <span>Année scolaire : {anneeScolaire.label}</span>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-2 shrink-0">
@@ -222,17 +237,11 @@ export default function ClassesPage({
                     <Link
                       href={`${salleClassesRoute}/${salleClasse.id}`}
                       title="Voir les détails de la classe"
-                      className="p-1 text-gray-400 hover:text-teal-primary rounded transition-colors shrink-0"
+                      className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors shadow-sm shrink-0"
                     >
-                      <Info className="w-4 h-4" />
+                      Détails
                     </Link>
                   </div>
-                  {salleClasse.annee_scolaire_label && (
-                    <div className="inline-flex items-center gap-1 text-xs text-gray-500">
-                      <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-                      {salleClasse.annee_scolaire_label}
-                    </div>
-                  )}
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-sm text-gray-600">
                     <span className="inline-flex items-center gap-1" title="Élèves">
                       <GraduationCap className="w-4 h-4 shrink-0 text-teal-primary" />

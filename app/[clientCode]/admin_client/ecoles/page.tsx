@@ -4,7 +4,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, DoorOpen, Download, GraduationCap, Link as LinkIcon, Loader2, Plus, School, Zap } from 'lucide-react';
+import { CalendarDays, DoorOpen, GraduationCap, Link as LinkIcon, Loader2, Plus, School, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
 
@@ -128,7 +128,6 @@ export default function EcolesPage({
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -199,52 +198,6 @@ export default function EcolesPage({
     fetchAllData();
   }, [clientCode, router]);
 
-  const handleDownloadPDF = async () => {
-    try {
-      setIsDownloading(true);
-      const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string; 
-      const token = getCookie(cookieName); 
-      if (!token) {
-        if (cookieName) document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        router.push('/login');
-        return;
-      }
-
-      const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/exportpdf`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (res.status === 401) {
-        if (cookieName) document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        router.push('/login');
-        return;
-      }
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Erreur ${res.status}: ${errorText}`);
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ecoles_statistiques_${new Date().toISOString().split('T')[0]}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error(err);
-      alert("Impossible de télécharger le PDF pour le moment. Veuillez vérifier la connexion au serveur.");
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-100">
@@ -288,22 +241,6 @@ export default function EcolesPage({
               <span className="font-medium">{action.display_name}</span>
             </Link>
           ))}
-
-          {/* Download PDF Button */}
-          <button
-            onClick={handleDownloadPDF}
-            disabled={isDownloading || ecoles.length === 0}
-            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 hover:text-teal-primary hover:border-teal-primary/30 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isDownloading ? (
-              <Loader2 className="w-5 h-5 shrink-0 animate-spin" />
-            ) : (
-              <Download className="w-5 h-5 shrink-0" />
-            )}
-            <span className="font-medium hidden sm:inline">
-              {isDownloading ? 'Génération...' : 'Télécharger PDF'}
-            </span>
-          </button>
         </div>
       </div>
 
