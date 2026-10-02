@@ -219,13 +219,6 @@ export default function ClassesPage({
                         {salleClasse.code || 'Classe sans nom'}
                       </Link>
                     </h3>
-                    <Link
-                      href={`${salleClassesRoute}/${salleClasse.id}`}
-                      title="Voir les détails de la classe"
-                      className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors shadow-sm shrink-0"
-                    >
-                      Détails
-                    </Link>
                   </div>
                   <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-sm text-gray-600">
                     <span className="inline-flex items-center gap-1" title="Élèves">

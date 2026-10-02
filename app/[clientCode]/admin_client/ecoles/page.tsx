@@ -295,22 +295,6 @@ export default function EcolesPage({
                       </div>
                     </div>
                   </Link>
-
-                  {/* Static Detail and Update Buttons */}
-                  <div className="flex items-center gap-2 shrink-0 sm:ml-2">
-                    <Link
-                      href={`/${clientCode}/admin_client/ecoles/${ecole.id}/detail`}
-                      className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors shadow-sm"
-                    >
-                      Détails
-                    </Link>
-                    <Link
-                      href={`/${clientCode}/admin_client/ecoles/${ecole.id}/update`}
-                      className="px-3 py-1.5 text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors shadow-sm"
-                    >
-                      Modifier
-                    </Link>
-                  </div>
                 </div>
                 
                 {/* Right Side: Dynamic Action Links per School */}

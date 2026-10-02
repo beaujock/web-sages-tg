@@ -9,7 +9,7 @@ import * as LucideIcons from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 // Destructure the static icons needed for the base layout
-const { Loader2, Users, Plus, Download, Link: LinkIcon } = LucideIcons;
+const { Loader2, Users, Plus, Download, Link: LinkIcon, DoorOpen } = LucideIcons;
 
 type DisplayEleveDO = {
     id: string;
@@ -20,6 +20,23 @@ type DisplayEleveDO = {
     gender: string | null;
     contact_email: string | null;
     contact_phone: string | null;
+    create_date: Date;
+    created_by: string;
+    change_date: Date | null;
+    changed_by: string | null;
+};
+
+type DisplayInscriptionDO = {
+    id: string;
+    salle_classe_id: string;
+    salle_classe_label: string;
+    eleve_id: string;
+    eleve_label: string;
+    registration_date: Date;
+    registration_status: string;
+    registration_status_label: string;
+    status_notes: string | null;
+    notes: string | null;
     create_date: Date;
     created_by: string;
     change_date: Date | null;
@@ -102,6 +119,55 @@ function EleveAvatar({ clientCode, ecoleId, matricule, eleveName }: { clientCode
       alt={`Photo de ${eleveName}`} 
       className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200 shadow-sm"
     />
+  );
+}
+
+// Sub-component to fetch and display the student's current active inscription classe
+function EleveCurrentClasse({ clientCode, ecoleId, eleveId }: { clientCode: string; ecoleId: string; eleveId: string }) {
+  const [inscription, setInscription] = useState<DisplayInscriptionDO | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchInscription = async () => {
+      const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+      const token = getCookie(cookieName);
+
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/eleves/${eleveId}/getcurrentactiveinscription`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+
+        // 404 means the student has no active inscription
+        if (res.ok || res.status === 404) {
+          const data = res.ok ? await res.json() : null;
+          setInscription(data?.inscription ?? data ?? null);
+          setLoaded(true);
+        }
+      } catch (err) {
+        console.error(`Erreur lors de la récupération de l'inscription de l'élève ${eleveId}`, err);
+      }
+    };
+
+    fetchInscription();
+  }, [clientCode, ecoleId, eleveId]);
+
+  if (!loaded) return null;
+
+  if (!inscription?.salle_classe_label) {
+    return <p className="text-xs text-gray-400 italic mt-0.5">Aucune inscription active</p>;
+  }
+
+  return (
+    <p className="flex items-center text-xs text-gray-500 mt-0.5 truncate" title={inscription.salle_classe_label}>
+      <DoorOpen className="w-3 h-3 mr-1 shrink-0 text-teal-primary" />
+      {inscription.salle_classe_label}
+    </p>
   );
 }
 
@@ -269,9 +335,12 @@ export default function ElevesPage({
                     matricule={eleve.matricule} 
                     eleveName={`${eleve.first_name} ${eleve.last_name}`} 
                   />
-                  <h3 className="font-semibold text-charcoal-secondary truncate" title={`${eleve.first_name} ${eleve.last_name}`}>
-                     {eleve.last_name} {eleve.first_name}
-                  </h3>
+                  <div className="flex flex-col truncate">
+                    <h3 className="font-semibold text-charcoal-secondary truncate" title={`${eleve.first_name} ${eleve.last_name}`}>
+                       {eleve.last_name} {eleve.first_name}
+                    </h3>
+                    <EleveCurrentClasse clientCode={clientCode} ecoleId={ecoleId} eleveId={eleve.id} />
+                  </div>
                 </div>
                 
                 {/* Dynamic Action Links per Eleve */}
