@@ -9,7 +9,7 @@ import * as LucideIcons from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 // Destructure the static icons needed for the base layout
-const { Loader2, Users, Plus, Download, Link: LinkIcon, DoorOpen } = LucideIcons;
+const { Loader2, Users, Plus, Download, Link: LinkIcon, DoorOpen, Search } = LucideIcons;
 
 type DisplayEleveDO = {
     id: string;
@@ -171,6 +171,10 @@ function EleveCurrentClasse({ clientCode, ecoleId, eleveId }: { clientCode: stri
   );
 }
 
+// Lowercase and strip accents so "Éloïse" matches "eloise"
+const normalizeText = (value: string) =>
+  value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
 export default function ElevesPage({
   params,
 }: {
@@ -186,6 +190,14 @@ export default function ElevesPage({
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+
+  // Every search word must match the first or last name (case- and accent-insensitive)
+  const searchTerms = normalizeText(search).split(/\s+/).filter(Boolean);
+  const filteredEleves = eleves.filter((eleve) => {
+    const fullName = normalizeText(`${eleve.first_name} ${eleve.last_name}`);
+    return searchTerms.every((term) => fullName.includes(term));
+  });
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -320,8 +332,26 @@ export default function ElevesPage({
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col space-y-3">
-          {eleves.map((eleve) => {
+        <>
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un élève par nom ou prénom..."
+              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-charcoal-secondary placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-primary/30 focus:border-teal-primary"
+            />
+          </div>
+
+          {filteredEleves.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-500">
+              Aucun élève ne correspond à « {search.trim()} ».
+            </p>
+          ) : (
+          <div className="flex flex-col space-y-3">
+          {filteredEleves.map((eleve) => {
             return (
               <div 
                 key={eleve.id} 
@@ -368,7 +398,9 @@ export default function ElevesPage({
               </div>
             );
           })}
-        </div>
+          </div>
+          )}
+        </>
       )}
     </div>
   );
