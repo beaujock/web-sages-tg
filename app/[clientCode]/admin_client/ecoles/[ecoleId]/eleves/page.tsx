@@ -5,11 +5,9 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import * as LucideIcons from 'lucide-react';
+import { DoorOpen, Link as LinkIcon, Loader2, Plus, Search, Users, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
-
-// Destructure the static icons needed for the base layout
-const { Loader2, Users, Plus, Download, Link: LinkIcon, DoorOpen, Search } = LucideIcons;
+import { LucideIconByName } from '@/components/LucideIconByName';
 
 type DisplayEleveDO = {
     id: string;
@@ -300,20 +298,16 @@ export default function ElevesPage({
         
         <div className="flex items-center flex-wrap gap-3">
           {/* Dynamic Page Actions */}
-          {pageActions.map((action) => {
-            const ActionIcon = LucideIcons[action.icon_name as keyof typeof LucideIcons] as React.ElementType;
-            
-            return (
-              <Link
-                key={action.id}
-                href={`/${clientCode}/admin_client/ecoles/${ecoleId}/eleves${action.end_route}`}
-                className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-              >
-                {ActionIcon && <ActionIcon className="w-5 h-5 shrink-0" />}
-                <span className="font-medium">{action.display_name}</span>
-              </Link>
-            );
-          })}
+          {pageActions.map((action) => (
+            <Link
+              key={action.id}
+              href={`/${clientCode}/admin_client/ecoles/${ecoleId}/eleves${action.end_route}`}
+              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              <LucideIconByName name={action.icon_name} fallback={Zap} className="w-5 h-5 shrink-0" />
+              <span className="font-medium">{action.display_name}</span>
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -375,25 +369,17 @@ export default function ElevesPage({
                 
                 {/* Dynamic Action Links per Eleve */}
                 <div className="flex items-center flex-wrap gap-2 shrink-0">
-                  {eleveLinks.map((link) => {
-                    const LinkActionIcon = LucideIcons[link.icon_name as keyof typeof LucideIcons] as React.ElementType;
-                    
-                    return (
-                      <Link
-                        key={link.id}
-                        href={`/${clientCode}/admin_client/ecoles/${ecoleId}/eleves/${eleve.id}${link.end_route}`}
-                        className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
-                        title={link.description || ' '}
-                      >
-                        {LinkActionIcon ? (
-                          <LinkActionIcon className="w-4 h-4 shrink-0" />
-                        ) : (
-                          <LinkIcon className="w-4 h-4 shrink-0" />
-                        )}
-                        <span className="hidden xl:inline text-sm font-medium">{link.display_name}</span>
-                      </Link>
-                    )
-                  })}
+                  {eleveLinks.map((link) => (
+                    <Link
+                      key={link.id}
+                      href={`/${clientCode}/admin_client/ecoles/${ecoleId}/eleves/${eleve.id}${link.end_route}`}
+                      className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
+                      title={link.description || ' '}
+                    >
+                      <LucideIconByName name={link.icon_name} fallback={LinkIcon} className="w-4 h-4 shrink-0" />
+                      <span className="hidden xl:inline text-sm font-medium">{link.display_name}</span>
+                    </Link>
+                  ))}
                 </div>
               </div>
             );
