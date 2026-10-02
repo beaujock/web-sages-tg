@@ -3,9 +3,9 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import * as LucideIcons from 'lucide-react';
-import { Loader2, BookOpen, Plus, CalendarDays, GraduationCap } from 'lucide-react';
+import { Loader2, BookOpen, Plus, CalendarDays, GraduationCap, Link as LinkIcon, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
+import { LucideIconByName } from '@/components/LucideIconByName';
 
 type DisplayEcoleDO = {
     id                       : string;
@@ -53,21 +53,6 @@ type InfoMenuItemLinkActionDO = {
     description  : string | null;
 };
 
-const renderIcon = (iconName?: string | null, className: string = "w-4 h-4 shrink-0") => {
-  if (!iconName) return <LucideIcons.Settings className={className} />;
-
-  // Dynamically access the Lucide component based on the exact string returned from the API
-  const IconComponent = (LucideIcons as any)[iconName];
-
-  if (!IconComponent) {
-    return <LucideIcons.MoreHorizontal className={className} />;
-  }
-
-  return <IconComponent className={className} />;
-};
-
-const isElevesLink = (link: InfoMenuItemLinkActionDO) => /^\/eleves(\/|$)/i.test(link.end_route);
-
 export default function ClassesPage({
   params,
 }: {
@@ -111,7 +96,7 @@ export default function ClassesPage({
 
         setAnneeScolaire(data.anneescolaire ?? null);
         setEcole(data.ecole ?? null);
-        setSalleClasses(data.salleClasses ?? []);
+        setSalleClasses(data.salleclasses ?? []);
 
         const actionsData = resActions.ok ? await resActions.json() : [];
         const linksData = resLinks.ok ? await resLinks.json() : [];
@@ -177,7 +162,7 @@ export default function ClassesPage({
                 title={action.description || action.display_name}
                 className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm shrink-0"
               >
-                {renderIcon(action.icon_name, "w-5 h-5 shrink-0")}
+                <LucideIconByName name={action.icon_name} fallback={Zap} className="w-5 h-5 shrink-0" />
                 <span className="font-medium">{action.display_name}</span>
               </Link>
             ))
@@ -206,7 +191,7 @@ export default function ClassesPage({
               title={pageActions[0].description || pageActions[0].display_name}
               className="inline-flex items-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
             >
-              {renderIcon(pageActions[0].icon_name, "w-5 h-5 shrink-0")}
+              <LucideIconByName name={pageActions[0].icon_name} fallback={Zap} className="w-5 h-5 shrink-0" />
               <span className="font-medium">{pageActions[0].display_name}</span>
             </Link>
           )}
@@ -254,17 +239,14 @@ export default function ClassesPage({
 
               {/* Dynamic Action Links */}
               <div className="flex items-center flex-wrap gap-2 shrink-0">
-                {classLinks
-                  // Hide the élèves link when the class has no students
-                  .filter((link) => salleClasse.number_eleves > 0 || !isElevesLink(link))
-                  .map((link) => (
+                {classLinks.map((link) => (
                   <Link
                     key={link.id}
                     href={`${salleClassesRoute}/${salleClasse.id}${link.end_route}`}
                     title={link.description || link.display_name}
                     className="flex items-center space-x-1.5 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
                   >
-                    {renderIcon(link.icon_name)}
+                    <LucideIconByName name={link.icon_name} fallback={LinkIcon} className="w-4 h-4 shrink-0" />
                     <span className="hidden md:inline text-sm font-medium">{link.display_name}</span>
                   </Link>
                 ))}

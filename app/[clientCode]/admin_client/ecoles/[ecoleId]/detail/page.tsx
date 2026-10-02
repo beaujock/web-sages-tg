@@ -4,7 +4,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, School, Calendar, Mail, Phone, Globe, User, Clock, Info } from 'lucide-react';
+import { ArrowLeft, Loader2, School, Calendar, Mail, Phone, Globe, User, Clock, Info, ImageIcon } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type DisplayEcoleDO = {
@@ -26,6 +26,20 @@ type DisplayEcoleDO = {
     changed_by: string | null;
 };
 
+// Converts the getecolelogo response (raw image or JSON/base64 payload) into an <img> src
+const toLogoSrc = async (res: Response): Promise<string | null> => {
+  const contentType = res.headers.get('Content-Type') || '';
+  if (contentType.startsWith('image/')) {
+    return URL.createObjectURL(await res.blob());
+  }
+  const data = await res.json();
+  const value: string | undefined = typeof data === 'string' ? data : data?.logo;
+  if (!value) return null;
+  return value.startsWith('data:') || value.startsWith('http') || value.startsWith('/')
+    ? value
+    : `data:image/png;base64,${value}`;
+};
+
 export default function EcoleDetailPage({
   params,
 }: {
@@ -37,6 +51,8 @@ export default function EcoleDetailPage({
   const [ecole, setEcole] = useState<DisplayEcoleDO | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [logoSrc, setLogoSrc] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEcoleDetail = async () => {
@@ -80,6 +96,41 @@ export default function EcoleDetailPage({
 
     fetchEcoleDetail();
   }, [clientCode, ecoleId, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchLogo = async () => {
+      try {
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const token = getCookie(cookieName);
+        if (!token) return;
+
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/getecolelogo`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ecoleId }),
+        });
+        if (!res.ok) return;
+
+        const src = await toLogoSrc(res);
+        if (!cancelled) setLogoSrc(src);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchLogo();
+    return () => { cancelled = true; };
+  }, [clientCode, ecoleId]);
+
+  // Release object URLs when they are replaced or the page unmounts
+  useEffect(() => () => {
+    if (logoSrc?.startsWith('blob:')) URL.revokeObjectURL(logoSrc);
+  }, [logoSrc]);
 
   const formatDate = (dateValue: Date | string | null) => {
     if (!dateValue) return '';
@@ -153,7 +204,28 @@ export default function EcoleDetailPage({
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6 space-y-8">
-          
+
+          {/* Logo */}
+          <section>
+            <h3 className="text-lg font-semibold text-charcoal-secondary border-b border-gray-100 pb-2 mb-4 flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-gray-400" />
+              Logo
+            </h3>
+            <div className="w-32 h-32 flex items-center justify-center bg-gray-50 border border-gray-100 rounded-xl overflow-hidden">
+              {logoSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoSrc}
+                  alt={`Logo ${ecole.short_name || ecole.full_name}`}
+                  className="w-full h-full object-contain"
+                  onError={() => setLogoSrc(null)}
+                />
+              ) : (
+                <School className="w-12 h-12 text-gray-300" />
+              )}
+            </div>
+          </section>
+
           {/* General Information */}
           <section>
             <h3 className="text-lg font-semibold text-charcoal-secondary border-b border-gray-100 pb-2 mb-4 flex items-center gap-2">
