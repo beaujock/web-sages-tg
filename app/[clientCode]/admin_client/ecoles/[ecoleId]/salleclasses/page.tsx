@@ -3,7 +3,7 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { Loader2, BookOpen, Plus, CalendarDays, GraduationCap, Link as LinkIcon, Zap } from 'lucide-react';
+import { Loader2, BookOpen, Plus, CalendarDays, GraduationCap, Link as LinkIcon, Search, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
 
@@ -53,6 +53,10 @@ type InfoMenuItemLinkActionDO = {
     description  : string | null;
 };
 
+// Lowercase and strip accents so the search is case- and accent-insensitive
+const normalizeText = (value: string) =>
+  value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
 export default function ClassesPage({
   params,
 }: {
@@ -67,6 +71,7 @@ export default function ClassesPage({
   const [classLinks, setClassLinks] = useState<InfoMenuItemLinkActionDO[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -119,6 +124,11 @@ export default function ClassesPage({
 
   const salleClassesRoute = `/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`;
   const schoolName = ecole?.short_name || ecole?.full_name || "l'école";
+
+  const searchTerm = normalizeText(search);
+  const filteredSalleClasses = salleClasses.filter((salleClasse) =>
+    normalizeText(salleClasse.code ?? '').includes(searchTerm)
+  );
 
   if (loading) {
     return (
@@ -197,9 +207,27 @@ export default function ClassesPage({
           )}
         </div>
       ) : (
+        <>
+          {/* ================= SEARCH BAR ================= */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher une classe par code..."
+              className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-charcoal-secondary placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-primary/30 focus:border-teal-primary"
+            />
+          </div>
+
+          {filteredSalleClasses.length === 0 ? (
+            <p className="py-8 text-center text-sm text-gray-500">
+              Aucune classe ne correspond à « {search.trim()} ».
+            </p>
+          ) : (
         /* ================= CLASSES LIST ================= */
         <div className="flex flex-col space-y-3">
-          {salleClasses.map((salleClasse) => (
+          {filteredSalleClasses.map((salleClasse) => (
             <div
               key={salleClasse.id}
               className="flex flex-col xl:flex-row xl:items-center justify-between p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-white gap-4"
@@ -247,6 +275,8 @@ export default function ClassesPage({
             </div>
           ))}
         </div>
+          )}
+        </>
       )}
     </div>
   );
