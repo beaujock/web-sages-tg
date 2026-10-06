@@ -63,9 +63,12 @@ export function EcoleHeader({ clientCode, ecoleId }: { clientCode: string; ecole
         )}
       </div>
 
-      <h1 className="text-center text-lg md:text-xl font-bold text-charcoal-secondary truncate" title={ecole?.full_name}>
-        {ecole?.full_name}
-      </h1>
+      <div className="flex flex-col items-center min-w-0">
+        <h1 className="max-w-full text-center text-xl md:text-2xl font-extrabold uppercase tracking-wide text-teal-primary truncate" title={ecole?.full_name}>
+          {ecole?.full_name}
+        </h1>
+        {ecole?.full_name && <span className="mt-1.5 h-1 w-16 rounded-full bg-coral-accent" />}
+      </div>
 
       <div className="justify-self-end flex items-center gap-1.5 text-sm font-medium text-teal-primary whitespace-nowrap">
         {anneeScolaire?.label && (
