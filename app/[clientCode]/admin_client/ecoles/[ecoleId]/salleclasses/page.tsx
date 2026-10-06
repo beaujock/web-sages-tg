@@ -265,7 +265,7 @@ export default function ClassesPage({
                     key={link.id}
                     href={`${salleClassesRoute}/${salleClasse.id}${link.end_route}`}
                     title={link.description || link.display_name}
-                    className="flex items-center space-x-1.5 px-3 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
+                    className="group flex items-center space-x-1.5 px-3 py-2 bg-teal-primary/5 border border-teal-primary/30 rounded-lg text-teal-primary hover:bg-teal-primary hover:text-white hover:border-teal-primary transition-colors"
                   >
                     <LucideIconByName name={link.icon_name} fallback={LinkIcon} className="w-4 h-4 shrink-0" />
                     <span className="hidden md:inline text-sm font-medium">{link.display_name}</span>

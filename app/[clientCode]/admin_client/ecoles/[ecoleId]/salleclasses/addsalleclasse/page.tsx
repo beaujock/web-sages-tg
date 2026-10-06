@@ -5,7 +5,7 @@ import { useState, use, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ArrowLeft, Save, BookOpen } from 'lucide-react';
-import { API_BASE_URL, getCookie, verifyUser } from '@/lib/auth';
+import { API_BASE_URL, getCookie } from '@/lib/auth';
 
 type CreateSalleClasseDO = {
     ecole_id                 : string;
@@ -13,7 +13,6 @@ type CreateSalleClasseDO = {
     code                     : string;
     description              : string|null;
     notes                    : string|null;
-    created_by               : string;
 };
 
 type BaseClass = {
@@ -104,22 +103,12 @@ export default function CreateClassroomPage({
         return;
       }
 
-      const user = await verifyUser(token);
-      if (!user) {
-        if (cookieName) {
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-        }
-        router.push('/login');
-        return;
-      }
-
       const payload: CreateSalleClasseDO = {
         ecole_id: ecoleId,
         classe_id: formData.classe_id,
         code: formData.code,
         description: formData.description || null,
         notes: formData.notes || null,
-        created_by: user.userId,
       };
 
       const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses/addsalleclasse`, {
@@ -130,6 +119,14 @@ export default function CreateClassroomPage({
         },
         body: JSON.stringify(payload)
       });
+
+      if (res.status === 401) {
+        if (cookieName) {
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+        router.push('/login');
+        return;
+      }
 
       const jsonData = await res.json();
 
