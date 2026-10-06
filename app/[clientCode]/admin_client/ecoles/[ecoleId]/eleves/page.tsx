@@ -285,9 +285,6 @@ export default function ElevesPage({
           <h2 className="text-2xl font-bold text-charcoal-secondary">
             Liste des Élèves
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Gérez les élèves de cette école.
-          </p>
         </div>
         
         <div className="flex items-center flex-wrap gap-3">
