@@ -205,13 +205,12 @@ export function RoleNavigation({
       {sidebar}
 
       <div className="flex-1 flex flex-col w-full min-w-0">
-        <header className="flex justify-end bg-white border-b border-gray-200 px-4 md:px-6 py-3 shadow-sm">
-          <div className="flex flex-col items-end text-right space-y-0.5 min-w-0">
-            {client?.legal_name && (
-              <span className="text-xs font-medium uppercase tracking-wide text-gray-500 truncate max-w-full" title={client.legal_name}>
-                {client.legal_name}
-              </span>
-            )}
+        <header className="flex items-center justify-between gap-4 bg-white border-b border-gray-200 px-4 md:px-6 py-3 shadow-sm">
+          <h1 className="text-base md:text-lg font-bold uppercase tracking-wide text-teal-primary truncate min-w-0" title={client?.legal_name}>
+            {client?.legal_name}
+          </h1>
+
+          <div className="flex flex-col items-end text-right space-y-0.5 min-w-0 shrink-0">
             {userFullName && (
               <div className="flex items-center space-x-2 min-w-0">
                 <UserCheck className="w-4 h-4 text-teal-primary shrink-0" />
