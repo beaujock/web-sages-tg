@@ -14,6 +14,36 @@ type SagesMenuItem = {
   active: boolean;
 };
 
+type DisplayClientDO = {
+  id: string;
+  systeme_scolaire_id: string;
+  systeme_scolaire_label: string;
+  active: boolean;
+  active_label: string;
+  status: string;
+  status_label: string;
+  legal_name: string;
+  short_name: string | null;
+  code: string;
+  address: string | null;
+  website: string | null;
+  main_contact_name: string | null;
+  main_contact_email: string | null;
+  main_contact_phone: string | null;
+  other_contact_infos: string | null;
+  notes: string | null;
+  create_date: Date;
+  created_by: string;
+  change_date: Date | null;
+  changed_by: string | null;
+};
+
+type InfoRoleDO = {
+  id: string;
+  name: string;
+  code: string;
+};
+
 const ICON_CLASS = 'w-5 h-5 shrink-0';
 
 function NavLink({
@@ -46,6 +76,8 @@ function NavLink({
 export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, clientCode: string }) {
   const [menuItems, setMenuItems] = useState<SagesMenuItem[]>([]);
   const [userFullName, setUserFullName] = useState<string>('');
+  const [client, setClient] = useState<DisplayClientDO | null>(null);
+  const [role, setRole] = useState<InfoRoleDO | null>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
@@ -81,6 +113,14 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
 
         if (data.userFullName) {
           setUserFullName(data.userFullName);
+        }
+
+        if (data.client) {
+          setClient(data.client);
+        }
+
+        if (data.role) {
+          setRole(data.role);
         }
       } catch (error) {
         console.error("Failed to load connection infos:", error);
@@ -119,11 +159,27 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
 
       <nav className="flex-1 p-2 md:p-4 space-y-2 overflow-y-auto">
 
-        <div className="hidden md:flex flex-col px-2 md:px-4 py-2 mb-2 border-b border-gray-700/50 pb-4">
-          <div className="flex items-center space-x-2">
-            <UserCheck className="w-4 h-4 text-teal-primary" />
+        <div className="flex flex-col px-0 md:px-4 py-2 mb-2 border-b border-gray-700/50 pb-4 space-y-1">
+          {client?.legal_name && (
+            <span className="hidden md:block text-xs font-medium uppercase tracking-wide text-gray-400 truncate" title={client.legal_name}>
+              {client.legal_name}
+            </span>
+          )}
+          <div className="hidden md:flex items-center space-x-2">
+            <UserCheck className="w-4 h-4 text-teal-primary shrink-0" />
             <span className="font-semibold text-sm truncate text-white">{userFullName}</span>
           </div>
+          {role?.name && (
+            <span className="hidden md:block text-xs text-gray-300 truncate pl-6">{role.name}</span>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center justify-center md:justify-start md:space-x-2 w-full px-2 md:px-0 py-1.5 mt-1 rounded-md text-gray-300 hover:text-coral-accent transition-all duration-200"
+            title="Se déconnecter"
+          >
+            <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+            <span className="hidden md:block text-xs font-medium truncate">Se déconnecter</span>
+          </button>
         </div>
 
         <NavLink
@@ -159,15 +215,6 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
           active={isSettingsActive}
           icon={<Settings className={ICON_CLASS} strokeWidth={isSettingsActive ? 2 : 1.5} />}
         />
-
-        <button
-          onClick={handleLogout}
-          className="flex items-center justify-center md:justify-start md:space-x-3 w-full px-2 md:px-4 py-2.5 rounded-md text-gray-300 hover:bg-coral-accent hover:text-white transition-all duration-200"
-          title="Se déconnecter"
-        >
-          <LogOut className={ICON_CLASS} strokeWidth={1.5} />
-          <span className="hidden md:block font-medium text-sm truncate">Se déconnecter</span>
-        </button>
       </div>
     </aside>
   );

@@ -11,8 +11,8 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "SAGES (Système d''Aide à la Gestion d''Etablissements Scolaires)",
-  description: 'Built with Next.js, Tailwind CSS v4, and Merriweather typography.',
+  title: "SAGES (Système d'Aide à la Gestion d''Etablissements Scolaires)",
+  description: 'Gérez efficacement votre établissement scolaire avec SAGES, la solution complète pour la gestion administrative, académique et financière.',
   viewport: 'width=device-width, initial-scale=1',
 };
 

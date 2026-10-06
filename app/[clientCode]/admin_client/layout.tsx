@@ -1,6 +1,4 @@
 import { RoleNavigation } from '@/components/RoleNavigation';
-// import { DashboardTopBar } from '@/components/admin_client/DashboardTopBar';
-// import { AdminClientQuickActionsHeader } from '@/components/admin_client/AdminClientQuickActionsHeader';
 
 export default async function AdminClientLayout({
   children,
