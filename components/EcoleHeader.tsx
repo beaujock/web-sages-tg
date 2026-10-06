@@ -64,10 +64,10 @@ export function EcoleHeader({ clientCode, ecoleId }: { clientCode: string; ecole
       </div>
 
       <div className="flex flex-col items-center min-w-0">
-        <h1 className="max-w-full text-center text-xl md:text-2xl font-extrabold uppercase tracking-wide text-teal-primary truncate" title={ecole?.full_name}>
+        <h1 className="max-w-full text-center text-xl md:text-2xl font-extrabold uppercase tracking-wide text-coral-accent truncate" title={ecole?.full_name}>
           {ecole?.full_name}
         </h1>
-        {ecole?.full_name && <span className="mt-1.5 h-1 w-16 rounded-full bg-coral-accent" />}
+        {ecole?.full_name && <span className="mt-1.5 h-1 w-16 rounded-full bg-teal-primary" />}
       </div>
 
       <div className="justify-self-end flex items-center gap-1.5 text-sm font-medium text-teal-primary whitespace-nowrap">
