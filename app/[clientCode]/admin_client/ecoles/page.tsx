@@ -234,7 +234,7 @@ export default function EcolesPage({
             <Link
               key={action.id}
               href={`/${clientCode}/admin_client/ecoles${action.end_route}`}
-              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
               title={action.description || undefined}
             >
               <LucideIconByName name={action.icon_name} fallback={Zap} className="w-5 h-5 shrink-0" />

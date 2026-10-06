@@ -3,21 +3,9 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { Loader2, UserRound, CalendarDays, Hash, Mail, Phone, Search, Link as LinkIcon, Zap } from 'lucide-react';
+import { Loader2, UserRound, Hash, Mail, Phone, Search, Link as LinkIcon, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
-
-type DisplayAnneeScolaireDO = {
-    id             : string;
-    start_date     : Date;
-    end_date       : Date;
-    label          : string;
-    notes          : string | null;
-    create_date    : Date;
-    created_by     : string;
-    change_date    : Date | null;
-    changed_by     : string | null;
-};
 
 type DisplayEnseignantDO = {
     id              : string;
@@ -58,7 +46,6 @@ export default function EnseignantsPage({
 }) {
   const { clientCode, ecoleId } = use(params);
 
-  const [anneeScolaire, setAnneeScolaire] = useState<DisplayAnneeScolaireDO | null>(null);
   const [enseignants, setEnseignants] = useState<DisplayEnseignantDO[]>([]);
   const [pageActions, setPageActions] = useState<InfoMenuItemLinkActionDO[]>([]);
   const [enseignantLinks, setEnseignantLinks] = useState<InfoMenuItemLinkActionDO[]>([]);
@@ -92,7 +79,6 @@ export default function EnseignantsPage({
           throw new Error(data.message || 'Erreur lors de la récupération des enseignants');
         }
 
-        setAnneeScolaire(data.anneescolaire ?? null);
         setEnseignants(data.enseignants ?? []);
 
         const actionsData = resActions.ok ? await resActions.json() : [];
@@ -146,15 +132,7 @@ export default function EnseignantsPage({
     <div className="space-y-6">
       {/* ================= HEADER ================= */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-charcoal-secondary">Enseignants</h2>
-          {anneeScolaire?.label && (
-            <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-teal-50 text-teal-primary rounded-lg text-sm font-medium">
-              <CalendarDays className="w-4 h-4 shrink-0" />
-              <span>Année scolaire : {anneeScolaire.label}</span>
-            </div>
-          )}
-        </div>
+        <h2 className="text-2xl font-bold text-charcoal-secondary">Liste des Enseignants</h2>
 
         <div className="flex gap-2 shrink-0">
           {pageActions.map(action => (

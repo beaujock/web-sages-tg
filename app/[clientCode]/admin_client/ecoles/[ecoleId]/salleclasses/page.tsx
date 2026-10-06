@@ -3,40 +3,9 @@
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { Loader2, BookOpen, Plus, CalendarDays, GraduationCap, Link as LinkIcon, Search, Zap } from 'lucide-react';
+import { Loader2, BookOpen, Plus, GraduationCap, Link as LinkIcon, Search, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
-
-type DisplayEcoleDO = {
-    id                       : string;
-    full_name                : string;
-    short_name               : string | null;
-    establishment_date       : Date | null;
-    code                     : string;
-    primary_contact_name     : string | null;
-    secondary_contact_name   : string | null;
-    contact_infos            : string | null;
-    phone_number             : string | null;
-    email                    : string | null;
-    website                  : string | null;
-    notes                    : string | null;
-    create_date              : Date;
-    created_by               : string;
-    change_date              : Date | null;
-    changed_by               : string | null;
-};
-
-type DisplayAnneeScolaireDO = {
-    id             : string;
-    start_date     : Date;
-    end_date       : Date;
-    label          : string;
-    notes          : string | null;
-    create_date    : Date;
-    created_by     : string;
-    change_date    : Date | null;
-    changed_by     : string | null;
-};
 
 type OverviewSalleClasseDO = {
     id                       : string;
@@ -64,8 +33,6 @@ export default function ClassesPage({
 }) {
   const { clientCode, ecoleId } = use(params);
 
-  const [anneeScolaire, setAnneeScolaire] = useState<DisplayAnneeScolaireDO | null>(null);
-  const [ecole, setEcole] = useState<DisplayEcoleDO | null>(null);
   const [salleClasses, setSalleClasses] = useState<OverviewSalleClasseDO[]>([]);
   const [pageActions, setPageActions] = useState<InfoMenuItemLinkActionDO[]>([]);
   const [classLinks, setClassLinks] = useState<InfoMenuItemLinkActionDO[]>([]);
@@ -99,8 +66,6 @@ export default function ClassesPage({
           throw new Error(data.message || 'Erreur lors de la récupération des classes');
         }
 
-        setAnneeScolaire(data.anneescolaire ?? null);
-        setEcole(data.ecole ?? null);
         setSalleClasses(data.salleclasses ?? []);
 
         const actionsData = resActions.ok ? await resActions.json() : [];
@@ -123,7 +88,6 @@ export default function ClassesPage({
   }, [clientCode, ecoleId]);
 
   const salleClassesRoute = `/${clientCode}/admin_client/ecoles/${ecoleId}/salleclasses`;
-  const schoolName = ecole?.short_name || ecole?.full_name || "l'école";
 
   const searchTerm = normalizeText(search);
   const filteredSalleClasses = salleClasses.filter((salleClasse) =>
@@ -151,17 +115,7 @@ export default function ClassesPage({
     <div className="space-y-6">
       {/* ================= HEADER ================= */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-charcoal-secondary">
-            Classes ({schoolName})
-          </h2>
-          {anneeScolaire?.label && (
-            <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-teal-50 text-teal-primary rounded-lg text-sm font-medium">
-              <CalendarDays className="w-4 h-4 shrink-0" />
-              <span>Année scolaire : {anneeScolaire.label}</span>
-            </div>
-          )}
-        </div>
+        <h2 className="text-2xl font-bold text-charcoal-secondary">Liste des classes</h2>
 
         <div className="flex gap-2 shrink-0">
           {pageActions.length > 0 ? (

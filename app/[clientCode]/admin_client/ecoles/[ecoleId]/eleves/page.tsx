@@ -182,7 +182,6 @@ export default function ElevesPage({
   const router = useRouter();
   
   const [eleves, setEleves] = useState<DisplayEleveDO[]>([]);
-  const [ecoleName, setEcoleName] = useState<string>('');
   const [pageActions, setPageActions] = useState<DynamicAction[]>([]);
   const [eleveLinks, setEleveLinks] = useState<DynamicEleveLink[]>([]);
   
@@ -247,11 +246,6 @@ export default function ElevesPage({
         const actionsData = actionsRes.ok ? await actionsRes.json() : [];
         const linksData = linksRes.ok ? await linksRes.json() : [];
 
-        // Extract school name if present in the response
-        if (elevesData && elevesData.ecole) {
-            setEcoleName(elevesData.ecole.short_name || elevesData.ecole.full_name || '');
-        }
-
         setEleves(Array.isArray(elevesData) ? elevesData : elevesData.eleves || []);
         setPageActions(Array.isArray(actionsData) ? actionsData : actionsData.actions || []);
         setEleveLinks(Array.isArray(linksData) ? linksData : linksData.links || []);
@@ -289,7 +283,7 @@ export default function ElevesPage({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-charcoal-secondary">
-            Liste des Élèves {ecoleName && `(${ecoleName})`}
+            Liste des Élèves
           </h2>
           <p className="text-sm text-gray-500 mt-1">
             Gérez les élèves de cette école.
