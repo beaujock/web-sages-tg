@@ -187,16 +187,6 @@ export function RoleNavigation({
           <span className="text-coral-accent text-sm px-2 md:px-4 hidden md:block">Aucun menu disponible.</span>
         )}
       </nav>
-
-      {/* Sidebar Footer */}
-      <div className="p-2 md:p-4 border-t border-gray-700 flex flex-col space-y-2">
-        <NavLink
-          href={settingsHref}
-          label="Paramétrages"
-          active={isSettingsActive}
-          icon={<Settings className={ICON_CLASS} strokeWidth={isSettingsActive ? 2 : 1.5} />}
-        />
-      </div>
     </aside>
   );
 
@@ -206,9 +196,21 @@ export function RoleNavigation({
 
       <div className="flex-1 flex flex-col w-full min-w-0">
         <header className="flex items-center justify-between gap-4 bg-white border-b border-gray-200 px-4 md:px-6 py-3 shadow-sm">
-          <h1 className="text-base md:text-lg font-bold uppercase tracking-wide text-teal-primary truncate min-w-0" title={client?.legal_name}>
-            {client?.legal_name}
-          </h1>
+          <div className="flex flex-col items-start space-y-1 min-w-0">
+            <h1 className="text-base md:text-lg font-bold uppercase tracking-wide text-teal-primary truncate max-w-full" title={client?.legal_name}>
+              {client?.legal_name}
+            </h1>
+            <Link
+              href={settingsHref}
+              className={`flex items-center space-x-1.5 text-xs font-medium transition-colors duration-200 ${
+                isSettingsActive ? 'text-teal-primary' : 'text-gray-500 hover:text-teal-primary'
+              }`}
+              title="Paramétrages"
+            >
+              <Settings className="w-4 h-4 shrink-0" strokeWidth={isSettingsActive ? 2 : 1.5} />
+              <span>Paramétrages</span>
+            </Link>
+          </div>
 
           <div className="flex flex-col items-end text-right space-y-0.5 min-w-0 shrink-0">
             {userFullName && (
