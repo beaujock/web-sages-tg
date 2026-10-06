@@ -293,7 +293,7 @@ export default function ElevesPage({
             <Link
               key={action.id}
               href={`/${clientCode}/admin_client/ecoles/${ecoleId}/eleves${action.end_route}`}
-              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary border-gray-200 text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
             >
               <LucideIconByName name={action.icon_name} fallback={Zap} className="w-5 h-5 shrink-0" />
               <span className="font-medium">{action.display_name}</span>
