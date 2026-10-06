@@ -73,7 +73,15 @@ function NavLink({
   );
 }
 
-export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, clientCode: string }) {
+export function RoleNavigation({
+  roleCode,
+  clientCode,
+  children,
+}: {
+  roleCode: string;
+  clientCode: string;
+  children: ReactNode;
+}) {
   const [menuItems, setMenuItems] = useState<SagesMenuItem[]>([]);
   const [userFullName, setUserFullName] = useState<string>('');
   const [client, setClient] = useState<DisplayClientDO | null>(null);
@@ -140,47 +148,20 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
     router.push(`/${clientCode}/login`);
   };
 
-  if (loading) {
-    return (
-      <aside className="w-16 md:w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col p-4 md:p-6 transition-all duration-300">
-        <div className="animate-pulse text-charcoal-secondary hidden md:block">Chargement...</div>
-      </aside>
-    );
-  }
-
   const settingsHref = `/${clientCode}/settings`;
   const isSettingsActive = pathname === settingsHref;
 
   const dashboardHref = `/${clientCode}/${roleCode}`;
   const isDashboardActive = pathname === dashboardHref || pathname === '/';
 
-  return (
+  const sidebar = loading ? (
+    <aside className="w-16 md:w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col p-4 md:p-6 transition-all duration-300">
+      <div className="animate-pulse text-charcoal-secondary hidden md:block">Chargement...</div>
+    </aside>
+  ) : (
     <aside className="w-16 md:w-64 min-h-screen bg-charcoal-secondary text-white flex flex-col shadow-lg shrink-0 transition-all duration-300">
 
       <nav className="flex-1 p-2 md:p-4 space-y-2 overflow-y-auto">
-
-        <div className="flex flex-col px-0 md:px-4 py-2 mb-2 border-b border-gray-700/50 pb-4 space-y-1">
-          {client?.legal_name && (
-            <span className="hidden md:block text-xs font-medium uppercase tracking-wide text-gray-400 truncate" title={client.legal_name}>
-              {client.legal_name}
-            </span>
-          )}
-          <div className="hidden md:flex items-center space-x-2">
-            <UserCheck className="w-4 h-4 text-teal-primary shrink-0" />
-            <span className="font-semibold text-sm truncate text-white">{userFullName}</span>
-          </div>
-          {role?.name && (
-            <span className="hidden md:block text-xs text-gray-300 truncate pl-6">{role.name}</span>
-          )}
-          <button
-            onClick={handleLogout}
-            className="flex items-center justify-center md:justify-start md:space-x-2 w-full px-2 md:px-0 py-1.5 mt-1 rounded-md text-gray-300 hover:text-coral-accent transition-all duration-200"
-            title="Se déconnecter"
-          >
-            <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-            <span className="hidden md:block text-xs font-medium truncate">Se déconnecter</span>
-          </button>
-        </div>
 
         <NavLink
           href={dashboardHref}
@@ -217,5 +198,42 @@ export function RoleNavigation({ roleCode, clientCode }: { roleCode: string, cli
         />
       </div>
     </aside>
+  );
+
+  return (
+    <div className="flex min-h-screen w-full bg-gray-50">
+      {sidebar}
+
+      <div className="flex-1 flex flex-col w-full min-w-0">
+        <header className="flex justify-end bg-white border-b border-gray-200 px-4 md:px-6 py-3 shadow-sm">
+          <div className="flex flex-col items-end text-right space-y-0.5 min-w-0">
+            {client?.legal_name && (
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-500 truncate max-w-full" title={client.legal_name}>
+                {client.legal_name}
+              </span>
+            )}
+            {userFullName && (
+              <div className="flex items-center space-x-2 min-w-0">
+                <UserCheck className="w-4 h-4 text-teal-primary shrink-0" />
+                <span className="font-semibold text-sm text-charcoal-secondary truncate">{userFullName}</span>
+              </div>
+            )}
+            {role?.name && (
+              <span className="text-xs text-gray-500 truncate max-w-full">{role.name}</span>
+            )}
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-1.5 pt-1 text-xs font-medium text-gray-500 hover:text-coral-accent transition-colors duration-200"
+              title="Se déconnecter"
+            >
+              <LogOut className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+              <span>Se déconnecter</span>
+            </button>
+          </div>
+        </header>
+
+        {children}
+      </div>
+    </div>
   );
 }
