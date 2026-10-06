@@ -51,7 +51,7 @@ export default function CreateClassroomPage({
           return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/lisclasses`, {
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/ecoles/${ecoleId}/listclasses`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
