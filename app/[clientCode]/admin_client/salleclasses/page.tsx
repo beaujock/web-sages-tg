@@ -212,7 +212,7 @@ export default function SalleClassesPage({
             <Link
               key={action.id} //[cite: 1]
               href={`/${clientCode}/admin_client/salleclasses${action.end_route}`} //[cite: 1]
-              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm" //[cite: 1]
+              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm" //[cite: 1]
             >
               <LucideIconByName name={action.icon_name} fallback={Zap} className="w-5 h-5 shrink-0" />
               <span className="font-medium">{action.display_name}</span>
@@ -260,18 +260,27 @@ export default function SalleClassesPage({
                 className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-white gap-4" //[cite: 1]
               >
                 {/* Classe Info */}
-                <div className="flex items-center space-x-3 truncate">
+                <div className="flex items-center space-x-3 min-w-0">
                   <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0">
                     <Presentation className="w-5 h-5" />
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col min-w-0">
                     <h3 className="font-semibold text-charcoal-secondary truncate" title={salleClasse.classe_label}>
-                      {salleClasse.code} - {salleClasse.classe_label}
+                      {salleClasse.code}
                     </h3>
-                    <div className="flex items-center text-xs text-gray-500 space-x-2 mt-0.5">
-                      <span className="flex items-center"><School className="w-3 h-3 mr-1" /> {salleClasse.ecole_label}</span>
-                      <span>•</span>
-                      <span>{salleClasse.annee_scolaire_label}</span>
+                    <div className="flex items-center flex-wrap gap-2 mt-1">
+                      {salleClasse.ecole_label && (
+                        <span
+                          className="inline-flex items-center max-w-full px-2 py-0.5 rounded-md bg-coral-accent/10 border border-coral-accent/30 text-coral-accent text-xs font-semibold uppercase tracking-wide"
+                          title={salleClasse.ecole_label}
+                        >
+                          <School className="w-3.5 h-3.5 mr-1 shrink-0" />
+                          <span className="truncate">{salleClasse.ecole_label}</span>
+                        </span>
+                      )}
+                      {salleClasse.annee_scolaire_label && (
+                        <span className="text-xs text-gray-500">{salleClasse.annee_scolaire_label}</span>
+                      )}
                     </div>
                   </div>
                 </div>
