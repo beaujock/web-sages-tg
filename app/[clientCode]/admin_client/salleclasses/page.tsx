@@ -8,22 +8,14 @@ import { Download, Link as LinkIcon, Loader2, Plus, Presentation, School, Search
 import { API_BASE_URL, getCookie } from '@/lib/auth'; //[cite: 1]
 import { LucideIconByName } from '@/components/LucideIconByName';
 
-type AdminClientSalleClasseDisplay = {
-    id: string;
-    ecole_id: string;
-    ecole_label: string;
-    annee_scolaire_id: string;
-    annee_scolaire_label: string;
-    classe_id: string;
-    classe_label: string;
-    code: string;
-    description: string | null;
-    notes: string | null;
-    number_eleves: number | string | null;
-    create_date: Date;
-    created_by: string;
-    change_date: Date | null;
-    changed_by: string | null;
+type OverviewSalleClasseDO = {
+    id                      : string;
+    code                    : string;
+    ecole_id                : string;
+    ecole_label             : string;
+    annee_scolaire_id       : string;
+    annee_scolaire_label    : string;
+    number_eleves           : number;
 };
 
 // Types for the dynamic API endpoints[cite: 1]
@@ -51,7 +43,7 @@ export default function SalleClassesPage({
   const { clientCode } = use(params); //[cite: 1]
   const router = useRouter(); //[cite: 1]
   
-  const [salleClasses, setSalleClasses] = useState<AdminClientSalleClasseDisplay[]>([]);
+  const [salleClasses, setSalleClasses] = useState<OverviewSalleClasseDO[]>([]);
   const [pageActions, setPageActions] = useState<DynamicAction[]>([]);
   const [classLinks, setClassLinks] = useState<DynamicClassLink[]>([]);
   
@@ -68,10 +60,8 @@ export default function SalleClassesPage({
     ? salleClasses.filter((salleClasse) =>
         [
           salleClasse.code,
-          salleClasse.classe_label,
           salleClasse.ecole_label,
           salleClasse.annee_scolaire_label,
-          salleClasse.description,
         ].some((field) => normalize(field).includes(normalizedSearch))
       )
     : salleClasses;
@@ -184,7 +174,7 @@ export default function SalleClassesPage({
       const url = window.URL.createObjectURL(blob); //[cite: 1]
       const a = document.createElement('a'); //[cite: 1]
       a.href = url; //[cite: 1]
-      a.download = `classes_statistiques_${new Date().toISOString().split('T')[0]}.pdf`; //[cite: 1]
+      a.download = `salleclasses_${new Date().toISOString().split('T')[0]}.pdf`; //[cite: 1]
       document.body.appendChild(a); //[cite: 1]
       a.click(); //[cite: 1]
       a.remove(); //[cite: 1]
@@ -241,7 +231,7 @@ export default function SalleClassesPage({
           <button
             onClick={handleDownloadPDF} //[cite: 1]
             disabled={isDownloading || salleClasses.length === 0} //[cite: 1]
-            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 hover:text-teal-primary hover:border-teal-primary/30 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" //[cite: 1]
+            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isDownloading ? ( //[cite: 1]
               <Loader2 className="w-5 h-5 shrink-0 animate-spin" />
@@ -249,7 +239,7 @@ export default function SalleClassesPage({
               <Download className="w-5 h-5 shrink-0" />
             )}
             <span className="font-medium hidden sm:inline">
-              {isDownloading ? 'Génération...' : 'Télécharger PDF'}
+              {isDownloading ? 'Génération...' : 'Liste en PDF'}
             </span>
           </button>
         </div>
@@ -309,7 +299,7 @@ export default function SalleClassesPage({
           )}
 
           {filteredSalleClasses.map((salleClasse) => { //[cite: 1]
-            const numberEleves = Number(salleClasse.number_eleves ?? 0) || 0;
+            const numberEleves = salleClasse.number_eleves ?? 0;
             return (
               <div 
                 key={salleClasse.id} 

@@ -272,7 +272,7 @@ export default function ElevesPage({
             <Link
               key={action.id}
               href={`/${clientCode}/admin_client/eleves${action.end_route}`}
-              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm"
             >
               <LucideIconByName name={action.icon_name} fallback={Zap} className="w-5 h-5 shrink-0" />
               <span className="font-medium">{action.display_name}</span>
@@ -282,7 +282,7 @@ export default function ElevesPage({
           <button
             onClick={handleDownloadPDF}
             disabled={isDownloading || eleves.length === 0}
-            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 hover:text-teal-primary hover:border-teal-primary/30 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isDownloading ? (
               <Loader2 className="w-5 h-5 shrink-0 animate-spin" />
@@ -290,7 +290,7 @@ export default function ElevesPage({
               <Download className="w-5 h-5 shrink-0" />
             )}
             <span className="font-medium hidden sm:inline">
-              {isDownloading ? 'Génération...' : 'Télécharger PDF'}
+              {isDownloading ? 'Génération...' : 'Liste en PDF'}
             </span>
           </button>
         </div>

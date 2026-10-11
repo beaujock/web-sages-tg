@@ -296,7 +296,7 @@ export default function EcolesPage({
           <button
             onClick={handleDownloadPDF}
             disabled={isDownloading || ecoles.length === 0}
-            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-white border border-gray-200 text-charcoal-secondary rounded-lg hover:bg-gray-50 hover:text-teal-primary hover:border-teal-primary/30 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center space-x-1.5 px-4 py-2 bg-teal-primary text-white rounded-lg hover:bg-[#005f73] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isDownloading ? (
               <Loader2 className="w-5 h-5 shrink-0 animate-spin" />
