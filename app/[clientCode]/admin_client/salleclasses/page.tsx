@@ -4,7 +4,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Download, Link as LinkIcon, Loader2, Plus, Presentation, School, Users, Zap } from 'lucide-react';
+import { Download, Link as LinkIcon, Loader2, Plus, Presentation, School, Search, Users, X, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth'; //[cite: 1]
 import { LucideIconByName } from '@/components/LucideIconByName';
 
@@ -58,6 +58,23 @@ export default function SalleClassesPage({
   const [loading, setLoading] = useState(true); //[cite: 1]
   const [error, setError] = useState(''); //[cite: 1]
   const [isDownloading, setIsDownloading] = useState(false); //[cite: 1]
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const normalize = (value: string | null | undefined) =>
+    (value ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  const normalizedSearch = normalize(searchTerm.trim());
+  const filteredSalleClasses = normalizedSearch
+    ? salleClasses.filter((salleClasse) =>
+        [
+          salleClasse.code,
+          salleClasse.classe_label,
+          salleClasse.ecole_label,
+          salleClasse.annee_scolaire_label,
+          salleClasse.description,
+        ].some((field) => normalize(field).includes(normalizedSearch))
+      )
+    : salleClasses;
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -254,7 +271,44 @@ export default function SalleClassesPage({
         </div>
       ) : (
         <div className="flex flex-col space-y-3">
-          {salleClasses.map((salleClasse) => { //[cite: 1]
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Rechercher une classe (code, école, année scolaire...)"
+              className="w-full pl-9 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-sm text-charcoal-secondary placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-primary/30 focus:border-teal-primary transition-colors"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-charcoal-secondary"
+                aria-label="Effacer la recherche"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {normalizedSearch && (
+            <p className="text-xs text-gray-500">
+              {filteredSalleClasses.length} classe{filteredSalleClasses.length > 1 ? 's' : ''} sur {salleClasses.length}
+            </p>
+          )}
+
+          {filteredSalleClasses.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+              <Search className="w-10 h-10 text-gray-400 mb-3" />
+              <p className="text-gray-500 text-center max-w-sm">
+                Aucune classe ne correspond à « {searchTerm.trim()} ».
+              </p>
+            </div>
+          )}
+
+          {filteredSalleClasses.map((salleClasse) => { //[cite: 1]
             const numberEleves = Number(salleClasse.number_eleves ?? 0) || 0;
             return (
               <div 
