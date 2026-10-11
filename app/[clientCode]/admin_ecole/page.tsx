@@ -33,7 +33,7 @@ function EcoleLogo({ clientCode, ecoleId, alt }: { clientCode: string; ecoleId: 
         const token = getCookie(cookieName);
         if (!token) return;
 
-        const res = await fetch(`${API_BASE_URL}/${clientCode}/storage/getecolelogo`, {
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_ecole/storage/getecolelogo`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
