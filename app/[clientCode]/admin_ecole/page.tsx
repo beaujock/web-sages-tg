@@ -15,14 +15,48 @@ type OverviewEcoleDO = {
     annee_scolaire_label    : string;
     number_salles_classes   : number;
     number_eleves           : number;
-    // Optional until the API returns them; the header falls back to short_name and a School icon
+    // Optional until the API returns it; the header falls back to short_name
     full_name?              : string | null;
-    logo?                   : string | null;
 };
 
-// École logo for the header; falls back to the School icon if missing or broken
-function EcoleLogo({ src, alt }: { src: string | null | undefined; alt: string }) {
+// Fetches the école logo for the header; falls back to the School icon if missing or broken
+function EcoleLogo({ clientCode, ecoleId, alt }: { clientCode: string; ecoleId: string; alt: string }) {
+  const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchLogo = async () => {
+      try {
+        const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+        const token = getCookie(cookieName);
+        if (!token) return;
+
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/storage/getecolelogo`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ecoleId }),
+        });
+
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!cancelled && data?.logo) setSrc(data.logo);
+      } catch (err) {
+        console.error("Erreur lors de la récupération du logo de l'école", err);
+      }
+    };
+
+    fetchLogo();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clientCode, ecoleId]);
 
   if (!src || failed) {
     return (
@@ -142,7 +176,7 @@ export default function AdminEcoleDashboard({
       {/* École Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 rounded-xl border border-gray-100 bg-linear-to-r from-teal-primary/5 to-transparent">
         <div className="flex items-center gap-4 min-w-0">
-          <EcoleLogo src={overview.logo} alt={`Logo de ${ecoleName}`} />
+          <EcoleLogo clientCode={clientCode} ecoleId={overview.id} alt={`Logo de ${ecoleName}`} />
           <div className="flex flex-col min-w-0">
             <h1 className="text-xl md:text-2xl font-bold text-charcoal-secondary leading-tight" title={ecoleName}>
               {ecoleName}
