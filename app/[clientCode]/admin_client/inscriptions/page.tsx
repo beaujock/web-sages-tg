@@ -369,8 +369,14 @@ export default function InscriptionsPage({
                 <div className="flex items-center space-x-3 min-w-0">
                   <EleveAvatar clientCode={clientCode} inscription={inscription} />
                   <div className="flex flex-col min-w-0">
-                    <h3 className="font-semibold text-charcoal-secondary truncate" title={inscription.eleve_label}>
+                    <h3
+                      className="font-semibold text-charcoal-secondary truncate"
+                      title={inscription.eleve_matricule ? `${inscription.eleve_label} (${inscription.eleve_matricule})` : inscription.eleve_label}
+                    >
                       {inscription.eleve_label || 'Élève sans nom'}
+                      {inscription.eleve_matricule && (
+                        <span className="ml-1.5 font-normal text-sm text-gray-500">({inscription.eleve_matricule})</span>
+                      )}
                     </h3>
                     <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-gray-500 mt-1">
                       {inscription.ecole_label && (
