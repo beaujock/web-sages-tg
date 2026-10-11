@@ -5,7 +5,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, ClipboardList, DoorOpen, Download, GraduationCap, Link as LinkIcon, Loader2, Plus, School, StickyNote, Zap } from 'lucide-react';
+import { CalendarDays, ClipboardList, DoorOpen, Download, GraduationCap, Link as LinkIcon, Loader2, Plus, School, Search, StickyNote, X, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
 
@@ -102,6 +102,10 @@ function EleveAvatar({ clientCode, inscription }: { clientCode: string; inscript
   );
 }
 
+// Lowercase and strip accents so "Éloïse" matches "eloise"
+const normalizeText = (value: string | null | undefined) =>
+  (value ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+
 export default function InscriptionsPage({
   params,
 }: {
@@ -118,6 +122,22 @@ export default function InscriptionsPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [search, setSearch] = useState('');
+
+  // Every search word must match the élève, matricule, école, salle de classe or notes
+  const searchTerms = normalizeText(search).split(/\s+/).filter(Boolean);
+  const filteredInscriptions = inscriptions.filter((inscription) => {
+    const haystack = normalizeText(
+      [
+        inscription.eleve_label,
+        inscription.eleve_matricule,
+        inscription.ecole_label,
+        inscription.salle_classe_label,
+        inscription.notes,
+      ].join(' ')
+    );
+    return searchTerms.every((term) => haystack.includes(term));
+  });
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -300,7 +320,44 @@ export default function InscriptionsPage({
         </div>
       ) : (
         <div className="flex flex-col space-y-3">
-          {inscriptions.map((inscription) => {
+          {/* Search Bar */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher une inscription (élève, matricule, école, salle de classe...)"
+              className="w-full pl-9 pr-9 py-2 bg-white border border-gray-200 rounded-lg text-sm text-charcoal-secondary placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-primary/30 focus:border-teal-primary transition-colors"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-charcoal-secondary"
+                aria-label="Effacer la recherche"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {searchTerms.length > 0 && (
+            <p className="text-xs text-gray-500">
+              {filteredInscriptions.length} inscription{filteredInscriptions.length > 1 ? 's' : ''} sur {inscriptions.length}
+            </p>
+          )}
+
+          {filteredInscriptions.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+              <Search className="w-10 h-10 text-gray-400 mb-3" />
+              <p className="text-gray-500 text-center max-w-sm">
+                Aucune inscription ne correspond à « {search.trim()} ».
+              </p>
+            </div>
+          )}
+
+          {filteredInscriptions.map((inscription) => {
             // Inscriptions are all scoped to the client's current school year
             const anneeScolaireLabel = anneeScolaire?.label;
 
