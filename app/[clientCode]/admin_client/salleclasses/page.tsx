@@ -342,7 +342,7 @@ export default function SalleClassesPage({
                         title={`${numberEleves} élève${numberEleves > 1 ? 's' : ''}`}
                       >
                         <Users className="w-3.5 h-3.5 mr-1 shrink-0" />
-                        {numberEleves} élève{numberEleves > 1 ? 's' : ''}
+                        {numberEleves}
                       </span>
                     </div>
                   </div>
