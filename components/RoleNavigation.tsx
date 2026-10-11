@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, LayoutTemplate, LogOut, Settings, UserCheck } from 'lucide-react';
+import { LayoutDashboard, LayoutTemplate, LogOut, UserCheck } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
 
@@ -148,9 +148,6 @@ export function RoleNavigation({
     router.push(`/${clientCode}/login`);
   };
 
-  const settingsHref = `/${clientCode}/settings`;
-  const isSettingsActive = pathname === settingsHref;
-
   const dashboardHref = `/${clientCode}/${roleCode}`;
   const isDashboardActive = pathname === dashboardHref || pathname === '/';
 
@@ -200,16 +197,6 @@ export function RoleNavigation({
             <h1 className="text-base md:text-lg font-bold uppercase tracking-wide text-teal-primary truncate max-w-full" title={client?.legal_name}>
               {client?.legal_name}
             </h1>
-            <Link
-              href={settingsHref}
-              className={`flex items-center space-x-1.5 text-xs font-medium transition-colors duration-200 ${
-                isSettingsActive ? 'text-teal-primary' : 'text-gray-500 hover:text-teal-primary'
-              }`}
-              title="Paramétrages"
-            >
-              <Settings className="w-4 h-4 shrink-0" strokeWidth={isSettingsActive ? 2 : 1.5} />
-              <span>Paramétrages</span>
-            </Link>
           </div>
 
           <div className="flex flex-col items-end text-right space-y-0.5 min-w-0 shrink-0">

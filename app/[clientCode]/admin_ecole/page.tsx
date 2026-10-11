@@ -15,7 +15,33 @@ type OverviewEcoleDO = {
     annee_scolaire_label    : string;
     number_salles_classes   : number;
     number_eleves           : number;
+    // Optional until the API returns them; the header falls back to short_name and a School icon
+    full_name?              : string | null;
+    logo?                   : string | null;
 };
+
+// École logo for the header; falls back to the School icon if missing or broken
+function EcoleLogo({ src, alt }: { src: string | null | undefined; alt: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return (
+      <div className="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-xl bg-teal-primary/10 text-teal-primary shrink-0">
+        <School className="w-8 h-8 md:w-10 md:h-10" />
+      </div>
+    );
+  }
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      className="w-16 h-16 md:w-20 md:h-20 object-contain rounded-xl bg-white border border-gray-100 p-1 shrink-0"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export default function AdminEcoleDashboard({
   params,
@@ -109,32 +135,35 @@ export default function AdminEcoleDashboard({
     },
   ];
 
+  const ecoleName = overview.full_name || overview.short_name || 'École sans nom';
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-charcoal-secondary">Vue d&apos;ensemble</h2>
-          <div className="flex items-center flex-wrap gap-2 mt-2">
-            <span
-              className="inline-flex items-center max-w-full px-2 py-0.5 rounded-md bg-coral-accent/10 border border-coral-accent/30 text-coral-accent text-xs font-semibold uppercase tracking-wide"
-              title={overview.short_name}
-            >
-              <School className="w-3.5 h-3.5 mr-1 shrink-0" />
-              <span className="truncate">{overview.short_name || 'École sans nom'}</span>
-            </span>
-            {overview.code && (
-              <span className="text-xs text-gray-500">Code : {overview.code}</span>
+      {/* École Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 md:p-6 rounded-xl border border-gray-100 bg-linear-to-r from-teal-primary/5 to-transparent">
+        <div className="flex items-center gap-4 min-w-0">
+          <EcoleLogo src={overview.logo} alt={`Logo de ${ecoleName}`} />
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-xl md:text-2xl font-bold text-charcoal-secondary leading-tight" title={ecoleName}>
+              {ecoleName}
+            </h1>
+            {overview.full_name && overview.short_name && overview.short_name !== overview.full_name && (
+              <span className="mt-1 text-sm font-semibold uppercase tracking-wide text-coral-accent truncate">
+                {overview.short_name}
+              </span>
             )}
           </div>
         </div>
 
         {overview.annee_scolaire_label && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 text-teal-primary rounded-lg font-medium">
-            <CalendarDays className="w-5 h-5" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-50 text-teal-primary rounded-lg font-medium self-start md:self-auto shrink-0">
+            <CalendarDays className="w-5 h-5 shrink-0" />
             <span>Année scolaire : {overview.annee_scolaire_label}</span>
           </div>
         )}
       </div>
+
+      <h2 className="text-lg font-semibold text-charcoal-secondary">Vue d&apos;ensemble</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {widgets.map(({ title, count, icon: Icon, link, linkText }) => (
