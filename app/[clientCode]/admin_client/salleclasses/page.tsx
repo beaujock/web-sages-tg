@@ -4,7 +4,7 @@
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Download, Link as LinkIcon, Loader2, Plus, Presentation, School, Zap } from 'lucide-react';
+import { Download, Link as LinkIcon, Loader2, Plus, Presentation, School, Users, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth'; //[cite: 1]
 import { LucideIconByName } from '@/components/LucideIconByName';
 
@@ -19,6 +19,7 @@ type AdminClientSalleClasseDisplay = {
     code: string;
     description: string | null;
     notes: string | null;
+    number_eleves: number | string | null;
     create_date: Date;
     created_by: string;
     change_date: Date | null;
@@ -254,6 +255,7 @@ export default function SalleClassesPage({
       ) : (
         <div className="flex flex-col space-y-3">
           {salleClasses.map((salleClasse) => { //[cite: 1]
+            const numberEleves = Number(salleClasse.number_eleves ?? 0) || 0;
             return (
               <div 
                 key={salleClasse.id} 
@@ -265,7 +267,7 @@ export default function SalleClassesPage({
                     <Presentation className="w-5 h-5" />
                   </div>
                   <div className="flex flex-col min-w-0">
-                    <h3 className="font-semibold text-charcoal-secondary truncate" title={salleClasse.classe_label}>
+                    <h3 className="font-semibold text-charcoal-secondary truncate" title={salleClasse.code}>
                       {salleClasse.code}
                     </h3>
                     <div className="flex items-center flex-wrap gap-2 mt-1">
@@ -281,6 +283,13 @@ export default function SalleClassesPage({
                       {salleClasse.annee_scolaire_label && (
                         <span className="text-xs text-gray-500">{salleClasse.annee_scolaire_label}</span>
                       )}
+                      <span
+                        className="inline-flex items-center px-2 py-0.5 rounded-md bg-teal-primary/10 border border-teal-primary/30 text-teal-primary text-xs font-semibold"
+                        title={`${numberEleves} élève${numberEleves > 1 ? 's' : ''}`}
+                      >
+                        <Users className="w-3.5 h-3.5 mr-1 shrink-0" />
+                        {numberEleves} élève{numberEleves > 1 ? 's' : ''}
+                      </span>
                     </div>
                   </div>
                 </div>
