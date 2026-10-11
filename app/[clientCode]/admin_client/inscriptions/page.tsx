@@ -1,10 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { CalendarDays, ClipboardList, DoorOpen, Download, Link as LinkIcon, Loader2, Plus, StickyNote, Zap } from 'lucide-react';
+import { CalendarDays, ClipboardList, DoorOpen, Download, GraduationCap, Link as LinkIcon, Loader2, Plus, School, StickyNote, Zap } from 'lucide-react';
 import { API_BASE_URL, getCookie } from '@/lib/auth';
 import { LucideIconByName } from '@/components/LucideIconByName';
 
@@ -15,9 +16,12 @@ type AnneeScolaireDO = {
 
 type DisplayInscriptionDO = {
     id                          : string;
+    ecole_id                    : string;
+    ecole_label                 : string;
     salle_classe_id             : string;
     salle_classe_label          : string;
     eleve_id                    : string;
+    eleve_matricule             : string;
     eleve_label                 : string;
     registration_date           : Date;
     registration_status         : string;
@@ -41,27 +45,62 @@ type DynamicAction = {
 
 type DynamicInscriptionLink = DynamicAction;
 
-// Badge colors per registration_status code; unknown codes fall back to neutral gray
-const STATUS_BADGE_CLASSES: Record<string, string> = {
-  A: 'bg-green-100 text-green-800',   // Actif
-  I: 'bg-gray-100 text-gray-700',     // Inactif
-  R: 'bg-red-100 text-red-800',       // Renvoyé
-  S: 'bg-amber-100 text-amber-800',   // Suspendu
-};
+// Sub-component to handle fetching and displaying the student's photo
+function EleveAvatar({ clientCode, inscription }: { clientCode: string; inscription: DisplayInscriptionDO }) {
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-const STATUS_FALLBACK_LABELS: Record<string, string> = {
-  A: 'Actif',
-  I: 'Inactif',
-  R: 'Renvoyé',
-  S: 'Suspendu',
-};
+  useEffect(() => {
+    const fetchPhoto = async () => {
+      const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME as string;
+      const token = getCookie(cookieName);
 
-// Dates arrive from the API as ISO strings, so normalize before formatting
-const formatDate = (value: Date | string | null) => {
-  if (!value) return '';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('fr-FR');
-};
+      if (!token || !inscription.eleve_matricule || !inscription.ecole_id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/${clientCode}/admin_client/eleves/getelevephoto`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify({ matricule: inscription.eleve_matricule, ecoleId: inscription.ecole_id }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.photo) setPhotoUrl(data.photo);
+        }
+      } catch (err) {
+        console.error(`Erreur lors de la récupération de la photo de l'élève ${inscription.eleve_id}`, err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPhoto();
+  }, [clientCode, inscription.eleve_id, inscription.ecole_id, inscription.eleve_matricule]);
+
+  if (loading || !photoUrl) {
+    return (
+      <div className="flex items-center justify-center w-10 h-10 bg-teal-primary/10 rounded-full text-teal-primary shrink-0">
+        <GraduationCap className="w-5 h-5" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={photoUrl}
+      alt={`Photo de ${inscription.eleve_label}`}
+      className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200 shadow-sm"
+      onError={() => setPhotoUrl(null)}
+    />
+  );
+}
 
 export default function InscriptionsPage({
   params,
@@ -209,12 +248,6 @@ export default function InscriptionsPage({
           <p className="text-sm text-gray-500 mt-1">
             Gérez les inscriptions des élèves dans vos établissements.
           </p>
-          {anneeScolaire?.label && (
-            <div className="inline-flex items-center gap-2 mt-3 px-3 py-1.5 bg-teal-50 text-teal-primary rounded-lg text-sm font-medium">
-              <CalendarDays className="w-4 h-4 shrink-0" />
-              <span>Année scolaire : {anneeScolaire.label}</span>
-            </div>
-          )}
         </div>
 
         <div className="flex items-center flex-wrap gap-3">
@@ -268,9 +301,8 @@ export default function InscriptionsPage({
       ) : (
         <div className="flex flex-col space-y-3">
           {inscriptions.map((inscription) => {
-            const registrationDate = formatDate(inscription.registration_date);
-            const statusCode = inscription.registration_status?.trim().toUpperCase() ?? '';
-            const statusLabel = inscription.registration_status_label || STATUS_FALLBACK_LABELS[statusCode];
+            // Inscriptions are all scoped to the client's current school year
+            const anneeScolaireLabel = anneeScolaire?.label;
 
             return (
               <div
@@ -278,34 +310,31 @@ export default function InscriptionsPage({
                 className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-gray-100 rounded-xl hover:shadow-md transition-shadow bg-white gap-4"
               >
                 <div className="flex items-center space-x-3 min-w-0">
-                  <div className="p-2 bg-teal-primary/10 rounded-lg text-teal-primary shrink-0">
-                    <ClipboardList className="w-5 h-5" />
-                  </div>
+                  <EleveAvatar clientCode={clientCode} inscription={inscription} />
                   <div className="flex flex-col min-w-0">
-                    <div className="flex items-center flex-wrap gap-2">
-                      <h3 className="font-semibold text-charcoal-secondary truncate" title={inscription.eleve_label}>
-                        {inscription.eleve_label || 'Élève sans nom'}
-                      </h3>
-                      {statusLabel && (
+                    <h3 className="font-semibold text-charcoal-secondary truncate" title={inscription.eleve_label}>
+                      {inscription.eleve_label || 'Élève sans nom'}
+                    </h3>
+                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-gray-500 mt-1">
+                      {inscription.ecole_label && (
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${STATUS_BADGE_CLASSES[statusCode] ?? 'bg-gray-100 text-gray-800'}`}
-                          title={inscription.status_notes || undefined}
+                          className="inline-flex items-center max-w-full px-2 py-0.5 rounded-md bg-coral-accent/10 border border-coral-accent/30 text-coral-accent text-xs font-semibold uppercase tracking-wide"
+                          title={inscription.ecole_label}
                         >
-                          {statusLabel}
+                          <School className="w-3.5 h-3.5 mr-1 shrink-0" />
+                          <span className="truncate">{inscription.ecole_label}</span>
                         </span>
                       )}
-                    </div>
-                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs text-gray-500 mt-0.5">
                       <span className="inline-flex items-center gap-1" title="Salle de classe">
                         <DoorOpen className="w-3.5 h-3.5 shrink-0" />
                         {inscription.salle_classe_label}
                       </span>
-                      {registrationDate && (
+                      {anneeScolaireLabel && (
                         <>
                           <span>•</span>
-                          <span className="inline-flex items-center gap-1" title="Date d'inscription">
+                          <span className="inline-flex items-center gap-1" title="Année scolaire">
                             <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-                            {registrationDate}
+                            {anneeScolaireLabel}
                           </span>
                         </>
                       )}
